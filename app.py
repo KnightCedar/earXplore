@@ -788,7 +788,8 @@ def health_sensor_position_view():
         abstract_sim_path=abstract_sim_path, 
         database_sim_path=database_sim_path,
         citation_path = citation_path,
-        coauthor_path = coauthor_path
+        coauthor_path = coauthor_path,
+        hide_sidebar=True,
     )
 
 @app.get("/sensor-position")
@@ -822,7 +823,8 @@ def sensor_position_view():
         abstract_sim_path=abstract_sim_path, 
         database_sim_path=database_sim_path,
         citation_path = citation_path,
-        coauthor_path = coauthor_path
+        coauthor_path = coauthor_path,
+        hide_sidebar=True,
     )
 
 
