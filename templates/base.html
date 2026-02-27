@@ -170,11 +170,6 @@
             <a href="{{ url_for('home', mode=data_mode,health_category=health_category) }}">
               <div class="navbar-item" data-section="tableView">
                 <span class="navbar-text">Tabular Overview</span>
-                <img
-                  class="navbar-icon"
-                  src="{{ url_for('static', filename='images/table_chart_icon.svg') }}"
-                  alt="Table Icon"
-                />
               </div>
             </a>
             <a href="{{ url_for('bar_chart', mode=data_mode,health_category=health_category) }}">

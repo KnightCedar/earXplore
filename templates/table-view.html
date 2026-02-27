@@ -30,9 +30,6 @@
 
 {% block scripts %}
   {{ super() }}
-  <script>
-  window.TAXONOMY = {{ taxonomy | safe }};
-  console.log("taxonomy:", window.TAXONOMY);
-</script>
+
   <script type="module" src="{{ url_for('static', filename='scripts/tableView.mjs') }}"></script>
 {% endblock scripts%}
