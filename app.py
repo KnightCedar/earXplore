@@ -169,9 +169,8 @@ def load_data(config_path):
     except Exception as e:
         return f"Error loading explanations.csv: {e}", None, None, None, None, None, None, None
     
-    taxonomy = config.get("taxonomy", {})
 
-    return data, explanations, taxonomy, database_path, abstract_sim_path, database_sim_path, citation_path, coauthor_path
+    return data, explanations, database_path, abstract_sim_path, database_sim_path, citation_path, coauthor_path
 
 def load_abstracts(database_path="data.csv"):
     try:
@@ -411,7 +410,7 @@ def home():
     print("HOME ROUTE NEW VERSION")
     data_mode, health_category, config_file = resolve_config()
     config_path = os.path.join(os.path.dirname(__file__), "configs", config_file)
-    data, explanations, taxonomy,database_path, abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
+    data, explanations, database_path, abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     
@@ -425,7 +424,7 @@ def home():
     if success_message:
         print(f"Success message detected: {success_message}")
 
-    return render_template("table-view.html", current_view="tableView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), start_categories=START_CATEGORY_FILTERS, success_message=success_message, taxonomy_dict=taxonomy,taxonomy=taxonomy,data_mode=data_mode,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path, citation_path = citation_path,coauthor_path = coauthor_path)
+    return render_template("table-view.html", current_view="tableView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), start_categories=START_CATEGORY_FILTERS, success_message=success_message, data_mode=data_mode,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path, citation_path = citation_path,coauthor_path = coauthor_path)
 
 @app.get("/bar-chart")
 def bar_chart():
@@ -435,7 +434,7 @@ def bar_chart():
         "configs",
         config_file
     )
-    data, explanations , taxonomy,database_path, abstract_sim_path, database_sim_path,citation_path,coauthor_path = load_data(config_path=config_path)
+    data, explanations , database_path, abstract_sim_path, database_sim_path,citation_path,coauthor_path = load_data(config_path=config_path)
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     
@@ -458,7 +457,7 @@ def bar_chart():
     if not isinstance(titles, list):
         return render_template("error.html", error=titles), 500
 
-    return render_template("bar-chart.html", current_view="chartView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), start_categories=START_CATEGORY_FILTERS, data_mode=data_mode, taxonomy_dict=taxonomy,taxonomy=taxonomy,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path,citation_path = citation_path,coauthor_path = coauthor_path)
+    return render_template("bar-chart.html", current_view="chartView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), start_categories=START_CATEGORY_FILTERS, data_mode=data_mode,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path,citation_path = citation_path,coauthor_path = coauthor_path)
 
 @app.get("/similarity")
 def similarity():
@@ -470,7 +469,7 @@ def similarity():
         "configs",
         config_file
     )
-    data, explanations , taxonomy,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
+    data, explanations ,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     
@@ -485,7 +484,7 @@ def similarity():
     
     excluded_categories = EXCLUDED_SIDEBAR_CATEGORIES + ADVANCED_SIDEBAR_CATEGORIES + ["Year"]
 
-    return render_template("similarity.html", current_view="similarityView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), similarity_data=similarity_data, excluded_categories=excluded_categories, data_mode=data_mode, taxonomy_dict=taxonomy,taxonomy=taxonomy,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path,citation_path = citation_path,coauthor_path = coauthor_path)
+    return render_template("similarity.html", current_view="similarityView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), similarity_data=similarity_data, excluded_categories=excluded_categories, data_mode=data_mode,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path,citation_path = citation_path,coauthor_path = coauthor_path)
 
 @app.get("/timeline")
 def timeline():
@@ -497,7 +496,7 @@ def timeline():
         "configs",
         config_file
     )
-    data, explanations , taxonomy,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
+    data, explanations ,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
     
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
@@ -523,7 +522,7 @@ def timeline():
         return render_template("error.html", error=coauthor_matrix), 500
     excluded_categories = EXCLUDED_SIDEBAR_CATEGORIES + ADVANCED_SIDEBAR_CATEGORIES + ["Year"]
 
-    return render_template("timeline.html", current_view="timeView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), citation_matrix=citation_matrix, coauthor_matrix=coauthor_matrix, excluded_categories=excluded_categories, data_mode=data_mode, taxonomy_dict=taxonomy,taxonomy=taxonomy,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path,citation_path = citation_path,coauthor_path = coauthor_path)
+    return render_template("timeline.html", current_view="timeView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), citation_matrix=citation_matrix, coauthor_matrix=coauthor_matrix, excluded_categories=excluded_categories, data_mode=data_mode, health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path,citation_path = citation_path,coauthor_path = coauthor_path)
 
 @app.get('/add_study')
 def add_study():
@@ -766,7 +765,7 @@ def health_sensor_position_view():
         "earXplore_health.yaml"
     )
 
-    data, explanations, taxonomy,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path = load_data(config_path=config_path)
+    data, explanations,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path = load_data(config_path=config_path)
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     if not isinstance(explanations, dict):
@@ -786,7 +785,6 @@ def health_sensor_position_view():
         filter_categories=json.dumps(filter_categories(data)),
         start_categories=START_CATEGORY_FILTERS,
         data_mode="health",
-        taxonomy_dict=taxonomy,taxonomy=json.dumps(taxonomy),
         abstract_sim_path=abstract_sim_path, 
         database_sim_path=database_sim_path,
         citation_path = citation_path,
@@ -801,7 +799,7 @@ def sensor_position_view():
         "earXplore_interaction.yaml"
     )
 
-    data, explanations ,taxonomy,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
+    data, explanations ,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     if not isinstance(explanations, dict):
@@ -820,7 +818,7 @@ def sensor_position_view():
         parenthical_columns=json.dumps(PARENTHICAL_COLUMNS),
         filter_categories=json.dumps(filter_categories(data)),
         start_categories=START_CATEGORY_FILTERS,
-        data_mode="default", taxonomy_dict=taxonomy,taxonomy=json.dumps(taxonomy),
+        data_mode="default",
         abstract_sim_path=abstract_sim_path, 
         database_sim_path=database_sim_path,
         citation_path = citation_path,

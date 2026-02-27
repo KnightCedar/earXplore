@@ -10,33 +10,5 @@ coauthor-matrix-path: interconnections_datasets/coauthor_matrix_health.csv
 
 
 
-taxonomy:
-  Cardio-Respiratory System:
-    - Heart Rate
-    - Blood Pressure
-    - Blood Oxygen Saturation
-    - Respiration Rate
-    - Breathing Phase
-    - Tidal Volume
-    - Respiration Marker
-    - Breathing Sound
-  Mental State:
-   - Emotion
-   - Stress
-  Nervous System:
-   - Brain Activity
-   - Sleep
-   - Drowsiness
-  Cardiovascular System:
-   - Heart Rate Variation
-   - Inter-Beat Interval
-   - Heart Sound
-   - Blood Glucose
-  Disease Detection:
-   - Hearing Status
-   - Epileptic Seizure
-  Thermal Regulation:
-   - Body Temperature
-  Health Tracking:
-   - Cough
+
 
