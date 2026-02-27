@@ -3,6 +3,7 @@ import {
   getDataEntry,
   showStudyModal,
   sortNodesByCategory,
+  getFilterKey,
 } from "./dataUtility.mjs";
 import {
   createLegend,
@@ -10,6 +11,8 @@ import {
   removeHighlighting,
   drawNode,
 } from "./d3DrawingUtility.mjs";
+
+const FILTER_KEY = getFilterKey();
 
 
 /*
@@ -238,6 +241,11 @@ $(document).ready(function () {
   function generateGraphData(threshold) {
     const { studyIDs, similarityMatrix } = getCurrentSimilarityData();
     const links = [];
+
+    const idToIndex = {};
+    for (let k = 0; k < studyIDs.length; k++) {
+      idToIndex[String(studyIDs[k]).trim()] = k;
+    }
   
     // Sort the nodes by category if a category is selected
     const { sortedNodes, colorScale } = sortNodesByCategory(
@@ -248,11 +256,16 @@ $(document).ready(function () {
     // Only check each pair once (i < j)
     for (let i = 0; i < sortedNodes.length; i++) {
       for (let j = i + 1; j < sortedNodes.length; j++) {
-        const nodeA = sortedNodes[i];
-        const nodeB = sortedNodes[j];
+        const nodeA = String(sortedNodes[i]).trim();
+        const nodeB = String(sortedNodes[j]).trim();
+
+        const idxA = idToIndex[nodeA];
+        const idxB = idToIndex[nodeB];
+
+        if (idxA === undefined || idxB === undefined) continue;
+
+        const similarity = similarityMatrix[idxA]?.[idxB];
   
-        const similarity =
-          similarityMatrix[parseInt(nodeA) - 1][parseInt(nodeB) - 1];
         if (similarity && similarity >= threshold) {
           links.push({
             sourceID: nodeA,
@@ -268,7 +281,7 @@ $(document).ready(function () {
   
   // Gets the current similarity data based on the selected type and the selected filters so only active studies are included, returns an object with the study IDs and the similarity matrix like this: {studyIDs: [...], similarityMatrix: [[...]]}
   function getCurrentSimilarityData() {
-    const filters = JSON.parse(window.sessionStorage.getItem("filters"));
+    const filters = JSON.parse(window.sessionStorage.getItem(FILTER_KEY));
     // Get the IDs of all data studies that are currently active based on the selected filters
     const activeDataIDs = filterData(filters).map((item) =>
       item["ID"].toString()

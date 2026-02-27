@@ -5,7 +5,8 @@
  * @type {Array}
  * @see parseData
  */
-const data = parseData($("body").data("data"));
+const data = $("body").data("data");
+
 
 /**
  * The categories for which parenthises should be removed when filtering.
@@ -74,10 +75,21 @@ const defaultColor = d3.color("rgb(184, 148, 145)").hex();
  * Updates the filters in the session storage to the provided filters object.
  * @param {Object} filters 
  */
-function updateFilters(filters) {
-  window.sessionStorage.setItem("filters", JSON.stringify(filters));
+function updateFilters(filters, key = "filters") {
+  window.sessionStorage.setItem(key, JSON.stringify(filters));
 }
 
+export function getFilterKey() {
+  const mode = document.body.dataset.mode || "default";
+  if (mode !== "health") return "filters";
+  const cat = getHealthCategory();
+  return cat ? `filters_health_${cat}` : "filters_health";
+}
+
+export function getHealthCategory() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("health_category") || "";
+}
 /**
  * Processes a search query over the titles and returns the matching studies.
  * @param {string} query - The search query entered by the user.
@@ -140,9 +152,9 @@ function parseData(dataString) {
  * @returns {Object|any} The found data entry object, or the value of the specified category, or undefined if not found.
  */
 function getDataEntry(id, category) {
-  return category == undefined ?
-    data.find(item => item["ID"].toString() === id.toString()) :
-    data.find(item => item["ID"].toString() === id.toString())[category];
+  const entry = data.find(item => String(item["ID"]) === String(id));
+  if (!entry) return undefined;
+  return category === undefined ? entry : entry[category];
 }
 
 /**
@@ -194,7 +206,7 @@ function filterData(filters) {
       }
 
       // Every other category is a value filter
-      const dataValues = cleanDataString(category, dataItem[category].toString());
+      const dataValues = cleanDataString(category, String(dataItem[category] ?? "N/A"));
 
       // If there are no active filters for the category, we can skip the check
       if (filterValues.length === 0) {
@@ -272,7 +284,8 @@ function sortNodesByCategory(nodes, category) {
   const valueMap = {};
   nodes.forEach(node => {
     // Get the values for the selected category from the data matching the node ID, category is defined at this point
-    const values = cleanDataString(category, getDataEntry(node, category).toString());
+    const raw = getDataEntry(node, category);
+    const values = cleanDataString(category, String(raw ?? "N/A"));
     valueMap[node] = [];
 
     // Add each value to the value map and the unique values set

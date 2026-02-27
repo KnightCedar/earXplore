@@ -1,418 +1,433 @@
-:root {
-  --color-accent: #b89491; /* Earable's accent color */
-  --color-accent-dark: #a37c79;
-  --color-gray: #6c757d;
-  --color-gray-light: #f8f9fa;
-  --color-link: #999;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: row;
-
-  --resp-font-size: clamp(0.5rem, 0.3713rem + 0.5492vw, 1.25rem);
-  --resp-font-ticks: clamp(0.5rem, 0.3713rem + 0.5492vw, 1.25rem);
-  --resp-font-ticks-bg: calc(clamp(0.25rem, 0.1213rem + 0.5492vw, 1rem) * 1.5);
-  --font-xl: calc(var(--resp-font-size) * 1.25);
-  --font-bg: calc(var(--resp-font-size) * 1.15);
-  --font-md: var(--resp-font-size);
-  --font-sm: calc(var(--resp-font-size) * 0.85);
-  --resp-padding: clamp(0.5rem, 0.3713rem + 0.5492vw, 1.25rem);
-}
-
-/* Hide elements that are only relevant for lower screen resolution */
-#toggle-sidebar,
-#close-sidebar,
-#mask,
-#visualization-warning {
-  display: none;
-}
-
-#visualization-warning {
-  align-items: center;
-  justify-content: center;
-  background-color: rgb(255, 255, 175);
-  border: 2px solid #b89230;
-  padding: 0.5em;
-  border-radius: 5px;
-  color: #b89230;
-  margin-bottom: 0.5rem;
-}
-
-#visualization-warning span {
-  text-align: center;
-  font-size: var(--font-bg);
-}
-
-header {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--resp-padding);
-}
-
-.left-section {
-  width: 80%;
-  padding: 15px 10px 1px 10px; /* Top padding increased to 15px */
-  flex: 2;
-  max-height: 100vh;
-  overflow-y: scroll;
-}
-
-/* Navbar Styles */
-nav {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
-  gap: 1em;
-}
-
-#nav-r {
-  gap: 1em;
-}
-
-#earXplore-repo,
-#open-earable-repo {
-  font-size: var(--font-bg);
-}
-
-#earXplore-repo a {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-}
-
-.link-section {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
-  gap: 10px; /* Creates space between each button */
-}
-
-.navbar-item {
-  padding: var(--resp-padding);
-  text-align: center;
-  border-radius: 5px; /* Rounded corners */
-}
-
-.navbar-text {
-  font-size: var(--font-bg);
-}
-
-.navbar-item:hover:not(.navbar-item-selected) {
-  background-color: #f8e6e6;
-  border-color: var(--color-accent);
-  border-radius: 5px;
-}
-
-.navbar-item-selected {
-  background-color: var(--color-accent);
-  font-weight: bold;
-  color: white;
-  border-radius: 5px;
-}
-
-#open-earable-logo {
-  width: 5em;
-}
-
-h3 {
-  font-size: var(--font-xl);
-  padding: 0;
-  margin: 0;
-}
-
-.navbar-icon {
-  display: none;
-}
-
-/* Styling the sidebar */
-#sidebar {
-  flex: 0.8;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  padding: 5px;
-  max-height: 100vh;
-  overflow-y: scroll;
-}
-
-.filter-group {
-  font-size: var(--font-md);
-}
-
-.question-circle,
-.info-circle {
-  width: var(--font-bg);
-}
-
-.panel {
-  background-color: var(--color-gray-light);
-  padding: 1em;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-.sidebar-buttons {
-  display: flex;
-  justify-content: end;
-  gap: 0.5em;
-  align-items: center;
-}
-
-.slider-container {
-  padding: 10px;
-  margin-top: 5px;
-  margin-bottom: 30px;
-}
-
-.hidden-filters {
-  display: none;
-}
-
-/* Buttons */
-.add-study-button {
-  color: var(--color-accent);
-  background-color: white;
-  border: none;
-  padding: 0;
-}
-
-.select-button {
-  background-color: var(--color-gray);
-  border: 1px solid var(--color-gray);
-  color: white;
-  padding: 0.1em 0.4em;
-  font-size: var(--font-md);
-  border-radius: 5px;
-  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-  text-shadow: none;
-}
-
-.exclusive-filter {
-  background-color: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
-.select-button:hover,
-.btn-link:hover {
-  opacity: 0.6;
-}
-
-.btn-link,
-.toggle-visibility-button {
-  background-color: var(--color-accent);
-  font-size: var(--font-md);
-  color: white;
-  border: none;
-  text-decoration: none;
-  border-radius: 5px;
-}
-
-.btn-link:hover {
-  color: white;
-}
-
-/* Modal Styles */
-.study-info-panel-header {
-  color: rgba(184, 148, 145, 1);
-  font-weight: bold;
-}
-
-.study-info-panel-header,
-#study-info-header {
-  font-size: var(--font-xl);
-}
-
-#study-info-modal-body,
-#study-info-modal-footer button {
-  font-size: var(--font-bg);
-}
-
-.study-info-panel-header:not(:first-child) {
-  margin-top: 20px;
-}
-
-.info-circle {
-  cursor: pointer;
-}
-
-#study-link-btn {
-  background-color: var(--color-accent);
-  color: white;
-  border: none;
-  padding: 0.375rem 0.75rem;
-  border-radius: 5px;
-  text-decoration: none;
-  opacity: 1;
-  font-size: var(--font-md);
-  border: 1px solid var(--color-accent);
-}
-
-#similar-studies-btn {
-  background-color: var(--color-accent);
-  border: 1px solid var(--color-accent);
-}
-
-#study-link-btn:hover,
-#study-link:hover,
-#similar-studies-btn:hover {
-  opacity: 0.6;
-}
-
-/* General Styles */
-
-p {
-  font-size: var(--font-sm);
-}
-
-/* Style checkboxes to match the grey color of the modal close button */
-input[type="checkbox"] {
-  accent-color: var(--color-gray); /* Bootstrap's secondary color */
-}
-
-.form-check-input:checked {
-  background-color: var(--color-gray);
-  border-color: var(--color-gray);
-}
-
-.form-check-input:hover {
-  opacity: 0.6;
-}
-
-.form-check-input:focus {
-  outline: none;
-  box-shadow: none;
-  border: 1px solid var(--color-gray);
-}
-
-a:link,
-a:visited {
-  text-decoration: none;
-  color: inherit;
-}
-
-@media (max-width: 1200px) {
-  /* Hide the sidebar from the user */
-  #sidebar {
-    position: fixed;
-    width: 80%;
-    background-color: white;
-    border-radius: 5px;
-    gap: 1em;
-    right: -100%;
-    z-index: 2;
-    transition: right 0.3s ease;
+  :root {
+    --color-accent: #b89491; /* Earable's accent color */
+    --color-accent-dark: #a37c79;
+    --color-gray: #6c757d;
+    --color-gray-light: #f8f9fa;
+    --color-link: #999;
   }
 
-  .left-section {
-    overflow-y: auto;
-  }
-
-  /* Make the sidebar appear when it should be visible */
-  #sidebar.visible-sidebar {
-    right: 0;
-  }
-
-  /* Add two buttons to open and close the sidebar */
-  #toggle-sidebar {
+  body {
+    margin: 0;
+    padding: 0;
     display: flex;
-    justify-content: end;
+    flex-direction: row;
+
+    --resp-font-size: clamp(0.5rem, 0.3713rem + 0.5492vw, 1.25rem);
+    --resp-font-ticks: clamp(0.5rem, 0.3713rem + 0.5492vw, 1.25rem);
+    --resp-font-ticks-bg: calc(clamp(0.25rem, 0.1213rem + 0.5492vw, 1rem) * 1.5);
+    --font-xl: calc(var(--resp-font-size) * 1.25);
+    --font-bg: calc(var(--resp-font-size) * 1.15);
+    --font-md: var(--resp-font-size);
+    --font-sm: calc(var(--resp-font-size) * 0.85);
+    --resp-padding: clamp(0.5rem, 0.3713rem + 0.5492vw, 1.25rem);
+  }
+
+  /* Hide elements that are only relevant for lower screen resolution */
+  #toggle-sidebar,
+  #close-sidebar,
+  #mask,
+  #visualization-warning {
+    display: none;
+  }
+
+  #visualization-warning {
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(255, 255, 175);
+    border: 2px solid #b89230;
+    padding: 0.5em;
+    border-radius: 5px;
+    color: #b89230;
+    margin-bottom: 0.5rem;
+  }
+
+  #visualization-warning span {
+    text-align: center;
     font-size: var(--font-bg);
   }
 
-  #toggle-sidebar-btn {
+  header {
     display: flex;
-    border: none;
-    background-color: var(--color-gray-light);
-    border-radius: 30%;
-    opacity: 0.5;
-    gap: 0.5em;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--resp-padding);
   }
 
-  #close-sidebar {
-    display: block;
-    border: none;
-    background-color: var(--color-gray-light);
-    border-radius: 30%;
-    opacity: 0.5;
+  .left-section {
+    width: 80%;
+    padding: 15px 10px 1px 10px; /* Top padding increased to 15px */
+    flex: 2;
+    max-height: 100vh;
+    overflow-y: scroll;
   }
 
-  #filter-icon {
-    display: block;
-    width: 2em;
-  }
-
-  #close-icon {
-    width: 1.25rem;
-  }
-
-  /* Add a mask over the content when the sidebar is open */
-  #mask {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1;
-  }
-
-  header,
+  /* Navbar Styles */
   nav {
-    gap: 0.5em;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: 1em;
   }
 
-  nav {
-    padding: 0.5em;
+  #nav-r {
+    gap: 1em;
   }
 
-  .sidebar-buttons {
-    margin-top: 1em;
+  #earXplore-repo,
+  #open-earable-repo {
+    font-size: var(--font-bg);
   }
 
-  .sidebar-buttons > div {
-    margin-top: 0 !important;
+  #earXplore-repo a {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    width: 10.5em;       
+    flex: 0 0 auto;      
   }
+
+  #earXplore-repo .dropdown-toggle {
+  display: block; 
+  width: 100%;
+  text-align: center;    
+  white-space: nowrap;  
+  overflow: hidden;
+  text-overflow: ellipsis; 
 }
 
-@media (max-width: 860px) {
-  /* Change the navbar links from text to icons */
+#earXplore-repo .dropdown-menu {
+  min-width: 100%;
+}
+
+  .link-section {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: 10px; /* Creates space between each button */
+  }
+
+  .navbar-item {
+    padding: var(--resp-padding);
+    text-align: center;
+    border-radius: 5px; /* Rounded corners */
+  }
+
   .navbar-text {
-    display: none;
+    font-size: var(--font-bg);
+  }
+
+  .navbar-item:hover:not(.navbar-item-selected) {
+    background-color: #f8e6e6;
+    border-color: var(--color-accent);
+    border-radius: 5px;
+  }
+
+  .navbar-item-selected {
+    background-color: var(--color-accent);
+    font-weight: bold;
+    color: white;
+    border-radius: 5px;
+  }
+
+  #open-earable-logo {
+    width: 5em;
+  }
+
+  h3 {
+    font-size: var(--font-xl);
+    padding: 0;
+    margin: 0;
   }
 
   .navbar-icon {
-    display: block;
-    width: 2em;
-    height: 2em;
-    background-color: transparent;
-  }
-
-  .navbar-icon:not(#filter-icon) {
-    opacity: 0.5;
-  }
-}
-
-@media (max-width: 550px) {
-  #nav-r {
-    gap: 0.5rem;
-  }
-
-  #earXplore-repo {
     display: none;
   }
 
-  .link-section {
-    gap: 0em;
+  /* Styling the sidebar */
+  #sidebar {
+    flex: 0.8;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 5px;
+    max-height: 100vh;
+    overflow-y: scroll;
   }
 
-  header {
-    gap: 0;
+  .filter-group {
+    font-size: var(--font-md);
   }
-}
+
+  .question-circle,
+  .info-circle {
+    width: var(--font-bg);
+  }
+
+  .panel {
+    background-color: var(--color-gray-light);
+    padding: 1em;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+
+  .sidebar-buttons {
+    display: flex;
+    justify-content: end;
+    gap: 0.5em;
+    align-items: center;
+  }
+
+  .slider-container {
+    padding: 10px;
+    margin-top: 5px;
+    margin-bottom: 30px;
+  }
+
+  .hidden-filters {
+    display: none;
+  }
+
+  /* Buttons */
+  .add-study-button {
+    color: var(--color-accent);
+    background-color: white;
+    border: none;
+    padding: 0;
+  }
+
+  .select-button {
+    background-color: var(--color-gray);
+    border: 1px solid var(--color-gray);
+    color: white;
+    padding: 0.1em 0.4em;
+    font-size: var(--font-md);
+    border-radius: 5px;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    text-shadow: none;
+  }
+
+  .exclusive-filter {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  .select-button:hover,
+  .btn-link:hover {
+    opacity: 0.6;
+  }
+
+  .btn-link,
+  .toggle-visibility-button {
+    background-color: var(--color-accent);
+    font-size: var(--font-md);
+    color: white;
+    border: none;
+    text-decoration: none;
+    border-radius: 5px;
+  }
+
+  .btn-link:hover {
+    color: white;
+  }
+
+  /* Modal Styles */
+  .study-info-panel-header {
+    color: rgba(184, 148, 145, 1);
+    font-weight: bold;
+  }
+
+  .study-info-panel-header,
+  #study-info-header {
+    font-size: var(--font-xl);
+  }
+
+  #study-info-modal-body,
+  #study-info-modal-footer button {
+    font-size: var(--font-bg);
+  }
+
+  .study-info-panel-header:not(:first-child) {
+    margin-top: 20px;
+  }
+
+  .info-circle {
+    cursor: pointer;
+  }
+
+  #study-link-btn {
+    background-color: var(--color-accent);
+    color: white;
+    border: none;
+    padding: 0.375rem 0.75rem;
+    border-radius: 5px;
+    text-decoration: none;
+    opacity: 1;
+    font-size: var(--font-md);
+    border: 1px solid var(--color-accent);
+  }
+
+  #similar-studies-btn {
+    background-color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+  }
+
+  #study-link-btn:hover,
+  #study-link:hover,
+  #similar-studies-btn:hover {
+    opacity: 0.6;
+  }
+
+  /* General Styles */
+
+  p {
+    font-size: var(--font-sm);
+  }
+
+  /* Style checkboxes to match the grey color of the modal close button */
+  input[type="checkbox"] {
+    accent-color: var(--color-gray); /* Bootstrap's secondary color */
+  }
+
+  .form-check-input:checked {
+    background-color: var(--color-gray);
+    border-color: var(--color-gray);
+  }
+
+  .form-check-input:hover {
+    opacity: 0.6;
+  }
+
+  .form-check-input:focus {
+    outline: none;
+    box-shadow: none;
+    border: 1px solid var(--color-gray);
+  }
+
+  a:link,
+  a:visited {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  @media (max-width: 1200px) {
+    /* Hide the sidebar from the user */
+    #sidebar {
+      position: fixed;
+      width: 80%;
+      background-color: white;
+      border-radius: 5px;
+      gap: 1em;
+      right: -100%;
+      z-index: 2;
+      transition: right 0.3s ease;
+    }
+
+    .left-section {
+      overflow-y: auto;
+    }
+
+    /* Make the sidebar appear when it should be visible */
+    #sidebar.visible-sidebar {
+      right: 0;
+    }
+
+    /* Add two buttons to open and close the sidebar */
+    #toggle-sidebar {
+      display: flex;
+      justify-content: end;
+      font-size: var(--font-bg);
+    }
+
+    #toggle-sidebar-btn {
+      display: flex;
+      border: none;
+      background-color: var(--color-gray-light);
+      border-radius: 30%;
+      opacity: 0.5;
+      gap: 0.5em;
+    }
+
+    #close-sidebar {
+      display: block;
+      border: none;
+      background-color: var(--color-gray-light);
+      border-radius: 30%;
+      opacity: 0.5;
+    }
+
+    #filter-icon {
+      display: block;
+      width: 2em;
+    }
+
+    #close-icon {
+      width: 1.25rem;
+    }
+
+    /* Add a mask over the content when the sidebar is open */
+    #mask {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1;
+    }
+
+    header,
+    nav {
+      gap: 0.5em;
+    }
+
+    nav {
+      padding: 0.5em;
+    }
+
+    .sidebar-buttons {
+      margin-top: 1em;
+    }
+
+    .sidebar-buttons > div {
+      margin-top: 0 !important;
+    }
+  }
+
+  @media (max-width: 860px) {
+    /* Change the navbar links from text to icons */
+    .navbar-text {
+      display: none;
+    }
+
+    .navbar-icon {
+      display: block;
+      width: 2em;
+      height: 2em;
+      background-color: transparent;
+    }
+
+    .navbar-icon:not(#filter-icon) {
+      opacity: 0.5;
+    }
+  }
+
+  @media (max-width: 550px) {
+    #nav-r {
+      gap: 0.5rem;
+    }
+
+    #earXplore-repo {
+      display: none;
+    }
+
+    .link-section {
+      gap: 0em;
+    }
+
+    header {
+      gap: 0;
+    }
+  }

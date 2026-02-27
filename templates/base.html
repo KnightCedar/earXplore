@@ -49,13 +49,15 @@
     {% endblock head %}
   </head>
   <body
-    data-data="{{ data }}"
-    data-abstracts="{{ abstracts }}"
-    data-titles="{{ titles }}"
-    data-filter-categories="{{ filter_categories }}"
-    data-parenthical-categories="{{ parenthical_columns }}"
-    data-explanations="{{ explanations }}"
-  >
+  data-data='{{ data | tojson | safe }}'
+  data-abstracts='{{ abstracts | tojson | safe }}'
+  data-titles='{{ titles | tojson | safe }}'
+  data-filter-categories='{{ filter_categories | tojson | safe }}'
+  data-parenthical-categories='{{ parenthical_columns | tojson | safe }}'
+  data-explanations='{{ explanations | tojson | safe }}'
+  data-mode="{{ data_mode | default('default') }}"
+  data-taxonomy='{{ taxonomy | tojson | safe }}'
+>
     {# Success Message Alert #} {% if success_message %}
     <div
       class="alert alert-success alert-dismissible fade show position-fixed"
@@ -113,21 +115,57 @@
               tabindex="-1"
             />
           </a>
-          <div id="earXplore-repo">
-            <a
-              href="https://github.com/OpenEarable/earXplore/tree/master"
-              target="_blank"
-            >
-              <h3>EarXplore</h3>
-              <span class="text-muted" style="color: #b89491 !important"
-                >Interaction</span
-              >
-            </a>
-          </div>
+          <div id="earXplore-repo" class="dropdown">
+
+  <a
+    href="https://github.com/OpenEarable/earXplore/tree/master"
+    target="_blank"
+    class="text-decoration-none"
+  >
+    <h3 class="m-0">EarXplore</h3>
+  </a>
+
+  <!-- dropdown to choose mode -->
+  <a
+    class="dropdown-toggle text-decoration-none"
+    href="#"
+    role="button"
+    data-bs-toggle="dropdown"
+    aria-expanded="false"
+    style="color: #b89491 !important"
+  >
+    {% if data_mode == "health" %}
+      Health Application
+    {% else %}
+      Interaction
+    {% endif %}
+  </a>
+
+  <ul class="dropdown-menu">
+
+    {% if data_mode == "health" %}
+      <li>
+        <a class="dropdown-item"
+           href="{{ url_for('home', mode='default', reset=1) }}">
+          Interaction
+        </a>
+      </li>
+    {% else %}
+      <li>
+        <a class="dropdown-item"
+           href="{{ url_for('health_home', mode='health') }}">
+          Health Application
+        </a>
+      </li>
+    {% endif %}
+
+  </ul>
+
+</div>
 
           {# Links to other Views #}
           <div class="link-section">
-            <a href="{{ url_for('home') }}">
+            <a href="{{ url_for('home', mode=data_mode,health_category=health_category) }}">
               <div class="navbar-item" data-section="tableView">
                 <span class="navbar-text">Tabular Overview</span>
                 <img
@@ -137,7 +175,7 @@
                 />
               </div>
             </a>
-            <a href="{{ url_for('bar_chart') }}">
+            <a href="{{ url_for('bar_chart', mode=data_mode,health_category=health_category) }}">
               <div class="navbar-item" data-section="chartView">
                 <span class="navbar-text">Distribution Charts</span>
                 <img
@@ -147,7 +185,7 @@
                 />
               </div>
             </a>
-            <a href="{{ url_for('similarity') }}">
+            <a href="{{ url_for('similarity', mode=data_mode,health_category=health_category) }}">
               <div class="navbar-item" data-section="similarityView">
                 <span class="navbar-text">Study Similarity</span>
                 <img
@@ -157,7 +195,7 @@
                 />
               </div>
             </a>
-            <a href="{{ url_for('timeline') }}">
+            <a href="{{ url_for('timeline', mode=data_mode,health_category=health_category) }}">
               <div class="navbar-item" data-section="timeView">
                 <span class="navbar-text">Study Timeline</span>
                 <img
@@ -167,6 +205,22 @@
                 />
               </div>
             </a>
+            <div class="health-toggle">
+  {% set is_health = (data_mode == "health") %}
+  {% if data_mode == "health" %}           
+  <a href="{{ url_for('health_sensor_position_view') if is_health else url_for('sensor_position_view') }}">
+    <div class="navbar-item" data-section="sensorPositionView">
+      <span class="navbar-text">Sensor Position</span>
+      <img
+        class="navbar-icon"
+        src="{{ url_for('static', filename='images/sensor_position_icon.svg') }}"
+        alt="Sensor Position Icon"
+      />
+    </div>
+  </a>
+  {% endif %}
+
+</div>
           </div>
         </nav>
 
@@ -422,7 +476,7 @@
           <div class="modal-body" id="study-info-modal-body"></div>
           <div class="modal-footer" id="study-info-modal-footer">
             <button class="btn btn-secondary" id="similar-studies-btn">
-              <a href="{{ url_for('similarity') }}">Find Similar Studies</a>
+              <a href="{{ url_for('similarity', mode=data_mode,health_category=health_category) }}">Find Similar Studies</a>
             </button>
             <button type="button" id="study-link-btn">
               <a id="study-link" target="_blank">Open Paper</a>

@@ -3,6 +3,7 @@ import {
   sortNodesByCategory,
   getDataEntry,
   showStudyModal,
+  getFilterKey,
 } from "./dataUtility.mjs";
 import {
   createLegend,
@@ -11,11 +12,48 @@ import {
   removeHighlighting,
 } from "./d3DrawingUtility.mjs";
 
+const FILTER_KEY = getFilterKey();
 
 $(document).ready(function () {
   // Load data from the backend
+
+  function buildMatrixIndex(matrix) {
+    if (!Array.isArray(matrix) || matrix.length === 0) return null;
+
+    const header = matrix[0]; // ["", "ID1", "ID2", ...]
+    const colIndex = {};
+    for (let c = 1; c < header.length; c++) {
+      colIndex[String(header[c]).trim()] = c;
+    }
+
+    const rowIndex = {};
+    for (let r = 1; r < matrix.length; r++) {
+      rowIndex[String(matrix[r][0]).trim()] = r; // first column = row ID
+    }
+
+    return { rowIndex, colIndex };
+  }
+
+  function hasEdge(matrix, index, fromId, toId) {
+    if (!index) return false;
+
+    const r = index.rowIndex[String(fromId).trim()];
+    const c = index.colIndex[String(toId).trim()];
+
+    if (r === undefined || c === undefined) return false;
+
+    const value = matrix[r]?.[c];
+
+    // 兼容 0/1、字符串、空值
+    return value !== undefined &&
+           value !== null &&
+           String(value).trim() !== "" &&
+           Number(value) !== 0;
+  }
   const coauthorMatrix = $("#timeline-graph-container").data("coauthor");
   const citationMatrix = $("#timeline-graph-container").data("citation");
+  const coauthorIndex = buildMatrixIndex(coauthorMatrix);
+  const citationIndex = buildMatrixIndex(citationMatrix);
   const filterCategories = $("body").data("filter-categories");
   const excludedCategories = $(".category-dropdown-container").data(
     "excluded-categories"
@@ -215,7 +253,7 @@ $(document).ready(function () {
   function generateTimelineData() {
     // Get the currently active nodes based on the selected category and filters
     const activeNodes = filterData(
-      JSON.parse(window.sessionStorage.getItem("filters"))
+      JSON.parse(window.sessionStorage.getItem(FILTER_KEY))
     ).map((item) => item["ID"].toString());
   
     // Order the nodes by the selected category
@@ -248,8 +286,9 @@ $(document).ready(function () {
     const links = { coauthorLinks: [], citingLinks: [], citedByLinks: [] };
     for (const node of sortedNodes) {
       for (const other of sortedNodes) {
+        if (node === other) continue;
         // Populate the links for co-authors
-        if (coauthorMatrix[node][other]) {
+        if (hasEdge(coauthorMatrix, coauthorIndex, node, other)) {
           links.coauthorLinks.push({
             sourceID: node,
             targetID: other,
@@ -257,14 +296,14 @@ $(document).ready(function () {
         }
   
         // Populate the links for citations
-        if (citationMatrix[node][other]) {
+        if (hasEdge(citationMatrix, citationIndex, node, other)) {
           links.citingLinks.push({
             sourceID: node,
             targetID: other,
           });
         }
   
-        if (citationMatrix[other][node]) {
+        if (hasEdge(citationMatrix, citationIndex, other, node)) {
           links.citedByLinks.push({
             sourceID: node,
             targetID: other,

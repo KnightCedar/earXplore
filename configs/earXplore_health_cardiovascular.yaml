@@ -1,0 +1,6 @@
+database-path: health_data/health_cardiovascular.csv
+explanations-path: health_data/explanations_health.csv
+
+
+select-deselect-all-categories: ["Year", "Health Indicator", "Sensor Position", "Sensor Type", "Physiological Signal", "Advantage","HRV Type"]  
+advanced-sidebar-categories: ["Study Link", "Single-Ear MAE","Cross-Ear MAE","MAE", "Median Error","Authors","RMSE","MAPE"]

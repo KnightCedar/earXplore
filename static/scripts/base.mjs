@@ -1,8 +1,54 @@
-import { convertToID, updateFilters, processQuery } from "./dataUtility.mjs";
+import { convertToID, updateFilters, processQuery, getFilterKey} from "./dataUtility.mjs";
 
+const FILTER_KEY = getFilterKey();
+
+
+const params = new URLSearchParams(window.location.search);
+
+if (params.get("reset") === "1") {
+ for (const k of Object.keys(sessionStorage)) {
+    if (k.startsWith("filters_health")) sessionStorage.removeItem(k);
+  }
+  for (const k of Object.keys(localStorage)) {
+    if (k.startsWith("selected_columns_health")) localStorage.removeItem(k);
+  }
+
+  sessionStorage.removeItem("filters"); // default
+  sessionStorage.removeItem("modalID");
+
+  const url = new URL(window.location.href);
+  url.searchParams.delete("reset");
+  window.history.replaceState({}, "", url);
+}
 
 
 $(document).ready(function () {
+
+  const select = document.getElementById("healthCategorySelect");
+
+if (select) {
+  // Initialize the selected item (from data-current)）
+  const current = select.dataset.current || "";
+  select.value = current;
+
+  select.addEventListener("change", () => {
+    const chosen = select.value; // Revert to the default health
+
+    // Clear the filters of the current database
+    const currentKey = getFilterKey();
+    sessionStorage.removeItem(currentKey);
+    sessionStorage.removeItem("modalID");
+
+    // Update the URL parameters and refresh
+    const url = new URL(window.location.href);
+    url.searchParams.set("mode", "health");
+    if (chosen) url.searchParams.set("health_category", chosen);
+    else url.searchParams.delete("health_category");
+
+    window.location.href = url.toString();
+  });
+}
+
 
   // Highlight the current view in the navbar
   const selectedView = $("nav").data("current-view");
@@ -23,11 +69,11 @@ $(document).ready(function () {
   */
 
   // Load the current value filters from the session storage
-  let filters = JSON.parse(window.sessionStorage.getItem("filters")) || null;
+  let filters = JSON.parse(window.sessionStorage.getItem(FILTER_KEY)) || null;
   if (!filters) {
     // If there isnt a filter object in session storage, create a new one
-    filters = {};
-    updateFilters(filters);
+    filters = { valueFilters: [], rangeFilters: {}, exclusiveFilters: [], categoryFilters: [] };
+    updateFilters(filters,FILTER_KEY);
   }
 
   let valueFilters = filters.valueFilters || null;
@@ -45,7 +91,7 @@ $(document).ready(function () {
     });
 
     filters.valueFilters = valueFilters;
-    updateFilters(filters);
+    updateFilters(filters,FILTER_KEY);
   } else {
     // If there are value filters in session storage, set the respective checkboxes to checked
     $(".value-filter").each((index, element) => {
@@ -56,46 +102,49 @@ $(document).ready(function () {
   }
 
   // If there are no range sliders in session storage, initialize them with default values
-  if (!rangeFilters) {
-    rangeFilters = {};
+  if (!rangeFilters) rangeFilters = {};
 
-    $(".range-slider").each(function () {
-      const slider = this;
-      const min = $(this).data("min");
-      const max = $(this).data("max");
-      const category = $(this).data("col");
+// Always iterate over all sliders in the DOM to ensure they are fully initialized.
+$(".range-slider").each(function () {
+  const sliderEl = this;
+  const $slider = $(sliderEl);
 
-      noUiSlider
-        .create(this, getSliderConfig([min, max], min, max))
-        .on("change", function (values, handle) {
-        const filters = JSON.parse(window.sessionStorage.getItem("filters")) || { rangeFilters: {}, valueFilters: [], exclusiveFilters: [] };
-          if (!filters.rangeFilters) filters.rangeFilters = {};          filters.rangeFilters[category] = values;
-          updateFilters(filters);
-        });
+  const category = $slider.data("col");
+  const min = $slider.data("min");
+  const max = $slider.data("max");
 
-      // Store the initial values in session storag
-      rangeFilters[category] = slider.noUiSlider.get();
-    });
+  // If a value exists in session storage, use it; otherwise, fall back to the default.
+  const startValues = (rangeFilters && rangeFilters[category]) ? rangeFilters[category] : [min, max];
 
-    filters.rangeFilters = rangeFilters;
-    updateFilters(filters);
+  // Prevent duplicate create() calls (the slider may have already been initialized in some cases).
+  if (!sliderEl.noUiSlider) {
+    noUiSlider
+      .create(sliderEl, getSliderConfig(startValues, min, max))
+      .on("change", function (values, handle) {
+        const filters =
+          JSON.parse(window.sessionStorage.getItem(FILTER_KEY)) || {
+            rangeFilters: {},
+            valueFilters: [],
+            exclusiveFilters: [],
+            categoryFilters: [],
+          };
+
+        if (!filters.rangeFilters) filters.rangeFilters = {};
+        filters.rangeFilters[category] = values;
+        updateFilters(filters, FILTER_KEY);
+      });
   } else {
-    // If there are range filters in session storage, configure the sliders with the stored valus
-    for (const [category, values] of Object.entries(rangeFilters)) {
-      const slider = $(`.range-slider[data-col="${category}"]`);
-      const max = slider.data("max");
-      const min = slider.data("min");
-
-      // Recreate the slider with the stored configuartion
-      noUiSlider
-        .create(slider[0], getSliderConfig(values, min, max))
-        .on("change", function (values, handle) {
-        const filters = JSON.parse(window.sessionStorage.getItem("filters")) || { rangeFilters: {}, valueFilters: [], exclusiveFilters: [] };
-          if (!filters.rangeFilters) filters.rangeFilters = {};          filters.rangeFilters[category] = values;
-          updateFilters(filters);
-        });
-    }
+    // If it has already been initialized, synchronize it to the correct value
+    sliderEl.noUiSlider.set(startValues);
   }
+
+  // Ensure rangeFilters always includes all sliders present in the DOM (to avoid missing keys in later filtering).
+  rangeFilters[category] = sliderEl.noUiSlider.get();
+});
+
+// Write the updated values back to filters.
+filters.rangeFilters = rangeFilters;
+updateFilters(filters, FILTER_KEY);
 
   // If there are no exclusive filters in session storage, initialize them as an empty array
   if (!exclusiveFilters) {
@@ -104,7 +153,7 @@ $(document).ready(function () {
     $(".exclusive-filter").each((index, element) => {
       $(element).text("Exclusive filtering: OFF");
     });
-    updateFilters(filters);
+    updateFilters(filters,FILTER_KEY);
   } else {
     // If there are exclusive filters in session storage, set the respective button text to "Exclusive filtering: ON" or "Exclusive filtering: OFF"
     $(".exclusive-filter").each((index, element) => {
@@ -138,7 +187,7 @@ $(document).ready(function () {
   }
 
   function selectAll(checkboxSelection) {
-    const filters = JSON.parse(window.sessionStorage.getItem("filters")) || { rangeFilters: {}, valueFilters: [], exclusiveFilters: [] };
+    const filters = JSON.parse(window.sessionStorage.getItem(FILTER_KEY)) || { rangeFilters: {}, valueFilters: [], exclusiveFilters: [],categoryFilters: [] };
       if (!filters.rangeFilters) filters.rangeFilters = {};
     
     // Return early if filters haven't been initialized yet
@@ -158,6 +207,7 @@ $(document).ready(function () {
     checkboxSelection.find(".range-slider").each((_, element) => {
       const min = $(element).data("min");
       const max = $(element).data("max");
+      if (!element.noUiSlider) return;
       element.noUiSlider.set([min, max]);
       changedSliders.push(element);
     });
@@ -179,14 +229,14 @@ $(document).ready(function () {
     });
 
     // Store the updated value filters in session storage
-    updateFilters(filters);
+    updateFilters(filters,FILTER_KEY);
 
     // Trigger the change event only once for performance
     checkboxSelection.find(".value-filter").first().trigger("change");
   }
 
   function deselectAll(checkboxSelection) {
-    const filters = JSON.parse(window.sessionStorage.getItem("filters")) || { rangeFilters: {}, valueFilters: [], exclusiveFilters: [] };
+    const filters = JSON.parse(window.sessionStorage.getItem(FILTER_KEY)) || { rangeFilters: {}, valueFilters: [], exclusiveFilters: [],categoryFilters: [] };
       if (!filters.rangeFilters) filters.rangeFilters = {};
     
     // Return early if filters haven't been initialized yet
@@ -205,6 +255,7 @@ $(document).ready(function () {
     const changedSliders = [];
     checkboxSelection.find(".range-slider").each((_, element) => {
       const min = $(element).data("min");
+      if (!element.noUiSlider) return;
       element.noUiSlider.set([min, min]);
       changedSliders.push(element);
     });
@@ -225,7 +276,7 @@ $(document).ready(function () {
     });
 
     // Store the updated value filters in session storage
-    updateFilters(filters);
+    updateFilters(filters,FILTER_KEY);
 
     // Trigger the change event only once for performance
     checkboxSelection.find(".value-filter").first().trigger("change");
@@ -234,7 +285,7 @@ $(document).ready(function () {
     $(".value-filter").on("change", function () {
       // Get the ID of the checkbox and convert it to a format suitable for storage
       const id = convertToID($(this).attr("id"));
-      const filters = JSON.parse(window.sessionStorage.getItem("filters")) || { rangeFilters: {}, valueFilters: [], exclusiveFilters: [] };
+      const filters = JSON.parse(window.sessionStorage.getItem(FILTER_KEY)) || { rangeFilters: {}, valueFilters: [], exclusiveFilters: [],categoryFilters: [] };
         if (!filters.rangeFilters) filters.rangeFilters = {};
       
       // Return early if filters haven't been initialized yet
@@ -249,11 +300,11 @@ $(document).ready(function () {
         // Remove the ID from the session storage
         filters.valueFilters.splice(filters.valueFilters.indexOf(id), 1);
       }
-      updateFilters(filters);
+      updateFilters(filters,FILTER_KEY);
     });
 
     $(".exclusive-filter").on("click", function () {
-      const filters = JSON.parse(window.sessionStorage.getItem("filters")) || { rangeFilters: {}, valueFilters: [], exclusiveFilters: [] };
+      const filters = JSON.parse(window.sessionStorage.getItem(FILTER_KEY)) || { rangeFilters: {}, valueFilters: [], exclusiveFilters: [],categoryFilters: [] };
       if (!filters.rangeFilters) filters.rangeFilters = {};
       const category = $(this).data("col");
 
@@ -269,7 +320,7 @@ $(document).ready(function () {
         filters.exclusiveFilters.push(category);
         $(this).text("Exclusive filterting: ON");
       }
-      updateFilters(filters);
+      updateFilters(filters,FILTER_KEY);
     });
 
   // Add "selecting / deselecting all" functionality to certain categories

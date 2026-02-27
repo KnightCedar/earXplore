@@ -1,0 +1,5 @@
+database-path: health_data/health_thermal_regulation.csv
+explanations-path: health_data/explanations_health.csv
+
+advanced-sidebar-categories: ["Authors", "Study Link", "Latency", "Accuracy"]
+select-deselect-all-categories: ["Year", "Health Indicator", "Sensor Position", "Sensor Type", "Physiological Signal", "Advantage"]

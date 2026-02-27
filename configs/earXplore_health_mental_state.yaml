@@ -1,0 +1,5 @@
+database-path: health_data/health_mental_state.csv
+explanations-path: health_data/explanations_health.csv
+
+advanced-sidebar-categories: ["Authors","Study Link","Leave-One-Out Cross-Validation Accuracy(LOOCV)","Cross-Validation Accuracy(CV)","Accuracy","Precision","Recall","F1 score"]
+select-deselect-all-categories: ["Year", "Health Indicator", "Sensor Position", "Sensor Type", "Physiological Signal", "Advantage"]

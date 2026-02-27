@@ -9,6 +9,15 @@ import mimetypes
 import yaml
 mimetypes.add_type('application/javascript', '.mjs')
 
+HEALTH_CATEGORY_CONFIG = {
+    "cardio_respiratory": "earXplore_health_cardio_respiratory.yaml",
+    "nervous_system": "earXplore_health_nervous_system.yaml",
+    "mental_state": "earXplore_health_mental_state.yaml",
+    "cardiovascular": "earXplore_health_cardiovascular.yaml",
+    "thermal_regulation": "earXplore_health_thermal_regulation.yaml",
+    "health_tracking": "earXplore_health_health_tracking.yaml"
+}
+
 # Categories that should not be filtered for
 EXCLUDED_SIDEBAR_CATEGORIES = []
 
@@ -98,12 +107,17 @@ def load_data(config_path):
         with open(config_path, 'r') as f:
             config = yaml.safe_load(f)
     except FileNotFoundError:
-        return f"Configuration file {config_path} not found"
+        return f"Configuration file {config_path} not found", None, None, None ,None, None, None, None
     except yaml.YAMLError as e:
-        return f"Error parsing configuration file {config_path}: {e}"
+        return f"Error parsing configuration file {config_path}: {e}", None, None, None ,None, None, None, None
     
     database_path = config.get("database-path", "data.csv")
     explanations_path = config.get("explanations-path", "explanations.csv")
+    abstract_sim_path = config.get("abstract-similarity-path","abstract_similarity_datasets/normalized_abstract_similarity.csv")
+    database_sim_path = config.get("database-similarity-path","database_similarity_datasets/normalized_database_similarity.csv")
+    citation_path = config.get("citation-matrix-path", "interconnections_datasets/citation_matrix.csv")
+    coauthor_path = config.get("coauthor-matrix-path", "interconnections_datasets/coauthor_matrix.csv")
+
     global EXCLUDED_SIDEBAR_CATEGORIES, ADVANCED_SIDEBAR_CATEGORIES, SLIDER_CATEGORIES, SELECT_DESELECT_ALL_CATEGORIES, EXCLUSIVE_FILTERING_CATEGORIES, PARENTHICAL_COLUMNS, SELECT_DESELECT_ALL_PANELS, INITIALLY_HIDDEN_PANELS, START_CATEGORY_FILTERS, SPECIAL_FORMAT_EXPLANATIONS
     EXCLUDED_SIDEBAR_CATEGORIES = config.get("excluded-sidebar-categories", [])
     ADVANCED_SIDEBAR_CATEGORIES = config.get("advanced-sidebar-categories", [])
@@ -115,6 +129,7 @@ def load_data(config_path):
     INITIALLY_HIDDEN_PANELS = config.get("initially-hidden-panels", [])
     START_CATEGORY_FILTERS = json.dumps(["INFO"] + config.get("start-category-filters", []))
     SPECIAL_FORMAT_EXPLANATIONS = config.get("special-format-explanations", [])
+   
 
     # Load data from CSV file into data variable
     try:
@@ -124,11 +139,11 @@ def load_data(config_path):
         df = df.replace('nan', 'N/A')  # Replace string 'nan' values
         data = df.to_dict(orient="records")
     except FileNotFoundError:
-        return "data.csv file not found"
+        return "data.csv file not found", None, None, None ,None, None, None, None
     except pd.errors.EmptyDataError:
-        return "data.csv file is empty"
+        return "data.csv file is empty", None, None, None ,None, None, None, None
     except Exception as e:
-        return f"Error loading data.csv: {e}"
+        return f"Error loading data.csv: {e}", None, None, None ,None, None, None, None
     
     # delete the 'Abstract' column from the data
     for data_entry in data:
@@ -146,19 +161,21 @@ def load_data(config_path):
         explanations_df = pd.read_csv(csv_path)
         explanations = dict(zip(explanations_df["Column"], explanations_df["Explanation"]))
     except FileNotFoundError:
-        return "explanations.csv file not found"
+        return "explanations.csv file not found", None, None, None, None, None, None, None
     except pd.errors.EmptyDataError:
-        return "explanations.csv file is empty"
+        return "explanations.csv file is empty", None, None, None, None, None, None, None
     except KeyError:
-        return "explanations.csv file is missing required columns"
+        return "explanations.csv file is missing required columns", None, None, None, None, None, None, None
     except Exception as e:
-        return f"Error loading explanations.csv: {e}"
+        return f"Error loading explanations.csv: {e}", None, None, None, None, None, None, None
+    
+    taxonomy = config.get("taxonomy", {})
 
-    return data, explanations
+    return data, explanations, taxonomy, database_path, abstract_sim_path, database_sim_path, citation_path, coauthor_path
 
-def load_abstracts():
+def load_abstracts(database_path="data.csv"):
     try:
-        csv_path = os.path.join(os.path.dirname(__file__), "data.csv")
+        csv_path = os.path.join(os.path.dirname(__file__), database_path)
         df = pd.read_csv(csv_path, usecols=["Abstract", "ID"])  # Load only the Abstract column
         df = df.fillna('N/A')  # Replace actual NaN values
         df = df.replace('nan', 'N/A')  # Replace string 'nan' values
@@ -172,9 +189,9 @@ def load_abstracts():
     
     return abstracts
 
-def load_titles():
+def load_titles(database_path="data.csv"):
     try:
-        csv_path = os.path.join(os.path.dirname(__file__), "data.csv")
+        csv_path = os.path.join(os.path.dirname(__file__), database_path)
         df = pd.read_csv(csv_path, usecols=["Title", "ID"])  # Load only the Title column
         df = df.fillna('N/A')  # Replace actual NaN values
         df = df.replace('nan', 'N/A')  # Replace string 'nan' values
@@ -253,7 +270,7 @@ def generate_sidebar_panels(data, explanations):
             unique_values = set()
             for row in data:
               # some cells contain multiple values separated by commas
-              cell_values = row[col].split(",")
+              cell_values = str(row[col]).split(",")
               for value in cell_values:
                   # trim values
                   trimmed_value = value.strip()
@@ -298,14 +315,14 @@ def generate_sidebar_panels(data, explanations):
 
     return sidebar_panels
 
-def load_similarity_data():
+def load_similarity_data(abstract_sim_path, database_sim_path):
     try:
         # Read the similarity matrix with the first column as index
-        csv_path_as = os.path.join(os.path.dirname(__file__), "abstract_similarity_datasets/normalized_abstract_similarity.csv")
+        csv_path_as = os.path.join(os.path.dirname(__file__), abstract_sim_path)
         abstract_similarity_df = pd.read_csv(csv_path_as, index_col=0)
         abstract_similarity_df = abstract_similarity_df.fillna('N/A')  # Replace actual NaN values
         abstract_similarity_df = abstract_similarity_df.replace('nan', 'N/A')  # Replace string 'nan' values
-        csv_path_ds = os.path.join(os.path.dirname(__file__), "database_similarity_datasets/normalized_database_similarity.csv")
+        csv_path_ds = os.path.join(os.path.dirname(__file__), database_sim_path)
         database_similarity_df = pd.read_csv(csv_path_ds, index_col=0)
         database_similarity_df = database_similarity_df.fillna('N/A')  # Replace actual NaN values
         database_similarity_df = database_similarity_df.replace('nan', 'N/A')  # Replace string 'nan' values
@@ -329,14 +346,15 @@ def load_similarity_data():
     
     return similarity_data
 
-def load_citation_data():
+def load_citation_data(citation_path="interconnections_datasets/citation_matrix.csv",
+                       coauthor_path="interconnections_datasets/coauthor_matrix.csv"):
     # Load citation and co-author matrices for timeline view
     citation_matrix = []
     coauthor_matrix = []
     
     try:
         # Read CSV - convert index to a column for proper processing in JS
-        csv_path = os.path.join(os.path.dirname(__file__), "interconnections_datasets/citation_matrix.csv")
+        csv_path = os.path.join(os.path.dirname(__file__), citation_path)
         citation_df = pd.read_csv(csv_path, index_col=0)
         
         # Get column names and index
@@ -353,11 +371,11 @@ def load_citation_data():
             citation_matrix.append(row_data)
                 
     except Exception as e:
-        return f"Error loading citation matrix: {e}"
+        return f"Error loading citation matrix: {e}",None
     
     try:
         # Read CSV - convert index to a column for proper processing in JS
-        csv_path = os.path.join(os.path.dirname(__file__), "interconnections_datasets/coauthor_matrix.csv")
+        csv_path = os.path.join(os.path.dirname(__file__), coauthor_path)
         coauthor_df = pd.read_csv(csv_path, index_col=0)
         
         # Get column names and index
@@ -378,10 +396,22 @@ def load_citation_data():
     
     return citation_matrix, coauthor_matrix
 
+
+def resolve_config():
+    mode = request.args.get("mode", "default")
+    if mode != "health":
+        return "default", None, "earXplore_interaction.yaml"
+
+    health_category = request.args.get("health_category") 
+    config_file = HEALTH_CATEGORY_CONFIG.get(health_category, "earXplore_health.yaml")
+    return "health", health_category, config_file
+
 @app.get("/")
 def home():
-    config_path = os.path.join(os.path.dirname(__file__), "configs", "earXplore_interaction.yaml")
-    data, explanations = load_data(config_path=config_path)
+    print("HOME ROUTE NEW VERSION")
+    data_mode, health_category, config_file = resolve_config()
+    config_path = os.path.join(os.path.dirname(__file__), "configs", config_file)
+    data, explanations, taxonomy,database_path, abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     
@@ -395,12 +425,17 @@ def home():
     if success_message:
         print(f"Success message detected: {success_message}")
 
-    return render_template("table-view.html", current_view="tableView", data=data, sidebar_panels=sidebar_panels, explanations=json.dumps(explanations), abstracts=json.dumps(load_abstracts()), titles=json.dumps(load_titles()), parenthical_columns=json.dumps(PARENTHICAL_COLUMNS), filter_categories=json.dumps(filter_categories(data)), start_categories=START_CATEGORY_FILTERS, success_message=success_message)
+    return render_template("table-view.html", current_view="tableView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), start_categories=START_CATEGORY_FILTERS, success_message=success_message, taxonomy_dict=taxonomy,taxonomy=taxonomy,data_mode=data_mode,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path, citation_path = citation_path,coauthor_path = coauthor_path)
 
 @app.get("/bar-chart")
 def bar_chart():
-    config_path = os.path.join(os.path.dirname(__file__), "configs", "earXplore_interaction.yaml")
-    data, explanations = load_data(config_path=config_path)
+    data_mode, health_category, config_file = resolve_config()
+    config_path = os.path.join(
+        os.path.dirname(__file__),
+        "configs",
+        config_file
+    )
+    data, explanations , taxonomy,database_path, abstract_sim_path, database_sim_path,citation_path,coauthor_path = load_data(config_path=config_path)
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     
@@ -423,12 +458,19 @@ def bar_chart():
     if not isinstance(titles, list):
         return render_template("error.html", error=titles), 500
 
-    return render_template("bar-chart.html", current_view="chartView", data=data, sidebar_panels=sidebar_panels, explanations=json.dumps(explanations), abstracts=json.dumps(load_abstracts()), titles=json.dumps(load_titles()), parenthical_columns=json.dumps(PARENTHICAL_COLUMNS), filter_categories=json.dumps(filter_categories(data)), start_categories=START_CATEGORY_FILTERS,)
+    return render_template("bar-chart.html", current_view="chartView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), start_categories=START_CATEGORY_FILTERS, data_mode=data_mode, taxonomy_dict=taxonomy,taxonomy=taxonomy,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path,citation_path = citation_path,coauthor_path = coauthor_path)
 
 @app.get("/similarity")
 def similarity():
-    config_path = os.path.join(os.path.dirname(__file__), "configs", "earXplore_interaction.yaml")
-    data, explanations = load_data(config_path=config_path)
+    if request.args.get("mode") == "health" and request.args.get("health_category") != "health_application":
+        return redirect(url_for("similarity", mode="health", health_category="health_application"))
+    data_mode, health_category, config_file = resolve_config()
+    config_path = os.path.join(
+        os.path.dirname(__file__),
+        "configs",
+        config_file
+    )
+    data, explanations , taxonomy,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     
@@ -437,18 +479,26 @@ def similarity():
     
     sidebar_panels = generate_sidebar_panels(data, explanations)
 
-    similarity_data = load_similarity_data()
+    similarity_data = load_similarity_data(abstract_sim_path, database_sim_path)
     if not isinstance(similarity_data, dict):
         return render_template("error.html", error=similarity_data), 500
     
     excluded_categories = EXCLUDED_SIDEBAR_CATEGORIES + ADVANCED_SIDEBAR_CATEGORIES + ["Year"]
 
-    return render_template("similarity.html", current_view="similarityView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=json.dumps(load_abstracts()), titles=json.dumps(load_titles()), parenthical_columns=json.dumps(PARENTHICAL_COLUMNS), filter_categories=json.dumps(filter_categories(data)), similarity_data=json.dumps(similarity_data), excluded_categories=json.dumps(excluded_categories))
+    return render_template("similarity.html", current_view="similarityView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), similarity_data=similarity_data, excluded_categories=excluded_categories, data_mode=data_mode, taxonomy_dict=taxonomy,taxonomy=taxonomy,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path,citation_path = citation_path,coauthor_path = coauthor_path)
 
 @app.get("/timeline")
 def timeline():
-    config_path = os.path.join(os.path.dirname(__file__), "configs", "earXplore_interaction.yaml")
-    data, explanations = load_data(config_path=config_path)
+    if request.args.get("mode") == "health" and request.args.get("health_category") != "health_application":
+        return redirect(url_for("timeline", mode="health", health_category="health_application"))
+    data_mode, health_category, config_file = resolve_config()
+    config_path = os.path.join(
+        os.path.dirname(__file__),
+        "configs",
+        config_file
+    )
+    data, explanations , taxonomy,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
+    
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     
@@ -462,11 +512,18 @@ def timeline():
         if category in EXCLUDED_SIDEBAR_CATEGORIES or category == "Year":
             continue
         categories.append(category)
+    print("[timeline] mode:", data_mode, "health_category:", health_category)
+    print("[timeline] citation_path:", citation_path)
+    print("[timeline] coauthor_path:", coauthor_path)
 
-    citation_matrix, coauthor_matrix = load_citation_data()
+    citation_matrix, coauthor_matrix = load_citation_data(citation_path,coauthor_path)
+    if not isinstance(citation_matrix, list):
+        return render_template("error.html", error=citation_matrix), 500
+    if not isinstance(coauthor_matrix, list):
+        return render_template("error.html", error=coauthor_matrix), 500
     excluded_categories = EXCLUDED_SIDEBAR_CATEGORIES + ADVANCED_SIDEBAR_CATEGORIES + ["Year"]
 
-    return render_template("timeline.html", current_view="timeView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=json.dumps(load_abstracts()), titles=json.dumps(load_titles()), parenthical_columns=json.dumps(PARENTHICAL_COLUMNS), filter_categories=json.dumps(filter_categories(data)), citation_matrix=json.dumps(citation_matrix), coauthor_matrix=json.dumps(coauthor_matrix), excluded_categories=json.dumps(excluded_categories))
+    return render_template("timeline.html", current_view="timeView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), citation_matrix=citation_matrix, coauthor_matrix=coauthor_matrix, excluded_categories=excluded_categories, data_mode=data_mode, taxonomy_dict=taxonomy,taxonomy=taxonomy,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path,citation_path = citation_path,coauthor_path = coauthor_path)
 
 @app.get('/add_study')
 def add_study():
@@ -696,6 +753,81 @@ def submit_study():
         traceback.print_exc()
         return jsonify({"success": False, "message": str(e)}), 500
 
+@app.get("/health")
+def health_home():
+    return redirect(url_for("home", mode="health"))
+
+#Jump to the sensor position view.
+@app.get("/health/sensor-position")
+def health_sensor_position_view():
+    config_path = os.path.join(
+        os.path.dirname(__file__),
+        "configs",
+        "earXplore_health.yaml"
+    )
+
+    data, explanations, taxonomy,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path = load_data(config_path=config_path)
+    if not isinstance(data, list):
+        return render_template("error.html", error=data), 500
+    if not isinstance(explanations, dict):
+        return render_template("error.html", error=explanations), 500
+
+    sidebar_panels = generate_sidebar_panels(data, explanations)
+
+    return render_template(
+        "sensor-position.html",
+        current_view="sensorPositionView",
+        data=data,
+        sidebar_panels=sidebar_panels,
+        explanations=json.dumps(explanations),
+        abstracts=json.dumps(load_abstracts()),
+        titles=json.dumps(load_titles()),
+        parenthical_columns=json.dumps(PARENTHICAL_COLUMNS),
+        filter_categories=json.dumps(filter_categories(data)),
+        start_categories=START_CATEGORY_FILTERS,
+        data_mode="health",
+        taxonomy_dict=taxonomy,taxonomy=json.dumps(taxonomy),
+        abstract_sim_path=abstract_sim_path, 
+        database_sim_path=database_sim_path,
+        citation_path = citation_path,
+        coauthor_path = coauthor_path
+    )
+
+@app.get("/sensor-position")
+def sensor_position_view():
+    config_path = os.path.join(
+        os.path.dirname(__file__),
+        "configs",
+        "earXplore_interaction.yaml"
+    )
+
+    data, explanations ,taxonomy,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
+    if not isinstance(data, list):
+        return render_template("error.html", error=data), 500
+    if not isinstance(explanations, dict):
+        return render_template("error.html", error=explanations), 500
+
+    sidebar_panels = generate_sidebar_panels(data, explanations)
+
+    return render_template(
+        "sensor-position.html",
+        current_view="sensorPositionView",
+        data=data,
+        sidebar_panels=sidebar_panels,
+        explanations=json.dumps(explanations),
+        abstracts=json.dumps(load_abstracts()),
+        titles=json.dumps(load_titles()),
+        parenthical_columns=json.dumps(PARENTHICAL_COLUMNS),
+        filter_categories=json.dumps(filter_categories(data)),
+        start_categories=START_CATEGORY_FILTERS,
+        data_mode="default", taxonomy_dict=taxonomy,taxonomy=json.dumps(taxonomy),
+        abstract_sim_path=abstract_sim_path, 
+        database_sim_path=database_sim_path,
+        citation_path = citation_path,
+        coauthor_path = coauthor_path
+    )
+
+
 @app.route('/submit_mistake', methods=['POST'])
 def submit_mistake():
     try:
@@ -731,3 +863,4 @@ def submit_mistake():
     
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=888)
+

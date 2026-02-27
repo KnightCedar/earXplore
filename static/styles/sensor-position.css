@@ -1,0 +1,63 @@
+#sensorPositionViewContainer {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: flex-start;      
+}
+
+/* Fixed distance to the left */
+#earWrapper {
+  flex: 0 0 400px;              
+  width: 400px;
+  position: relative;
+}
+
+#earImage {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.sensor-position-dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #d9534f;
+  border: 2px solid white;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  z-index: 10;           
+}
+
+#sensorPositionResults {
+  flex: 0 0 520px;
+  width: 520px;
+  max-width: 520px;
+}
+
+#sensorPositionStudyDetail {
+  max-height: 520px;            /* Control the height. */
+  overflow-y: auto;        
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 8px;
+  margin-top: 8px;
+}
+
+#sensorPositionStudyDetail table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+#sensorPositionStudyDetail th,
+#sensorPositionStudyDetail td {
+  word-break: break-word;
+}
+
+#sensorPositionStudies {
+  max-height: 260px;      /* Control the height of related studies */
+  overflow-y: auto;   
+  margin-bottom: 12px;
+}

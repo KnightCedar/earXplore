@@ -10,10 +10,14 @@ function getColors(node, colorCategory, colorScale) {
     return [defaultColor];
   }
 
-  const values = cleanDataString(colorCategory, getDataEntry(node, colorCategory).toString());
+  const raw = getDataEntry(node, colorCategory);
+  const safeStr = (raw ?? "N/A").toString(); 
+
+  const values = cleanDataString(colorCategory, safeStr);
   const colors = values.map(value => colorScale(value)).filter(Boolean);
 
-  return colors;
+
+  return colors.length ? colors : [defaultColor];
 }
 
 function drawNode(nodeSelection, colorCategory, arc, colorScale) {
@@ -129,7 +133,9 @@ function createLegend(nodes, colorScale, category, legendContainer) {
 
   const uniqueValues = new Set();
   for (const node of nodes) {
-    const values = cleanDataString(category, getDataEntry(node, category).toString());
+    const raw = getDataEntry(node, category);
+    const safeStr = (raw ?? "N/A").toString();  
+    const values = cleanDataString(category, safeStr);
     values.forEach(value => uniqueValues.add(value));
   }
 

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block styles %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/sensor-position.css') }}">
+{% endblock styles %}
+
+{% block content %}
+  {{ super() }}
+  <script id="sensorPositionData" type="application/json">
+    {{ data | tojson }}
+  </script>
+
+  <div id="sensorPositionViewContainer">
+    <div id="earWrapper">
+      <img
+        id="earImage"
+        src="{{ url_for('static', filename='images/ear_sensor_map.png') }}"
+        alt="Ear Sensor Position Map"
+      />
+      <!-- sensor dots injected by JS -->
+    </div>
+
+    <div id="sensorPositionResults">
+      <h5 id="sensorPositionTitle">Select a sensor position</h5>
+
+      <!-- Filtered list of studies -->
+      <div id="sensorPositionStudies"></div>
+
+      <!-- Show the detailed information of the selected study -->
+      <h6 id="sensorPositionDetailTitle" style="margin-top:16px; display:none;">
+        Study details
+      </h6>
+      <div id="sensorPositionStudyDetail"></div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block scripts %}
+  {{ super() }}
+  <script type="module" src="{{ url_for('static', filename='scripts/sensor-position.mjs') }}"></script>
+{% endblock scripts %}

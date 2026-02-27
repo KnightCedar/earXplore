@@ -7,6 +7,24 @@
 {% block content %}
 
   {# Only shown on smaller screens #}
+  {# Health Category dropdown (only in health mode) #}
+{% if data_mode == "health" %}
+  <div class="mb-3 d-flex align-items-center gap-2">
+    <label for="healthCategorySelect" class="mb-0"><strong>Health Category:</strong></label>
+    <select id="healthCategorySelect"
+            class="form-select form-select-sm"
+            style="max-width: 380px;"
+            data-current="{{ health_category or '' }}">
+      <option value="">All (Health Application)</option>
+      <option value="cardio_respiratory">Cardio-Respiratory System</option>
+      <option value="cardiovascular">Cardiovascular System</option>
+      <option value="health_tracking">Health Tracking</option>
+      <option value="mental_state">Mental State</option>
+      <option value="nervous_system">Nervous System</option>
+      <option value="thermal_regulation">Thermal Rugulation</option>
+    </select>
+  </div>
+{% endif %}
   <button id="select-filter-button">
     Select Category Filters:
     <img id="filter-icon" src="{{ url_for('static', filename='images/filter_icon_v2.svg')}}" alt="Filter Icon"/>

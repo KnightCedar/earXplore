@@ -4,7 +4,11 @@ import {
   specialOrders,
   showStudyModal,
   defaultColors,
+  getFilterKey
 } from "./dataUtility.mjs";
+
+
+const FILTER_KEY = getFilterKey();
 
 
 /*
@@ -34,7 +38,7 @@ $(document).ready(function () {
   // Function to create Modal HTML for a given category and label
   function createModalHTML(category, label) {
     const activeData = filterData(
-      JSON.parse(window.sessionStorage.getItem("filters"))
+      JSON.parse(window.sessionStorage.getItem(FILTER_KEY))
     );
     const fullCategory = getFullCategory(category);
   
@@ -92,7 +96,7 @@ $(document).ready(function () {
   // Creates all bar charts based on the data passed by the server and the currently active filters (categories and value filters)
   function createBarCharts() {
     $("#chartsContainer").empty(); // Clear the charts container
-    const filters = JSON.parse(window.sessionStorage.getItem("filters"));
+    const filters = JSON.parse(window.sessionStorage.getItem(FILTER_KEY));
     const activeCategories = filters.categoryFilters
       .map((cat) => getFullCategory(cat))
       .filter((cat) => cat !== undefined);
@@ -288,7 +292,7 @@ $(document).ready(function () {
   
   function updateVisibility() {
     const maxBars = parseInt($("#maxBarsDropdown").val());
-    const filters = JSON.parse(window.sessionStorage.getItem("filters"));
+    const filters = JSON.parse(window.sessionStorage.getItem(FILTER_KEY));
     const activeCategories = filters.categoryFilters
       .map((cat) => getFullCategory(cat))
       .filter((cat) => cat !== undefined);

@@ -51,7 +51,7 @@
       </div>
     </div>
 
-    <div class="category-dropdown-container" data-excluded-categories="{{ excluded_categories }}">
+    <div class="category-dropdown-container" data-excluded-categories="{{ excluded_categories | tojson }}">
       <label for="timelineColorCategory">
         <strong>Color Nodes by:</strong>
       </label>
@@ -62,7 +62,7 @@
     </div>
   </div>
     
-  <div id="timeline-graph-container" data-coauthor="{{ coauthor_matrix }}" data-citation="{{ citation_matrix }}" data-categories="{{ categories }}">
+  <div id="timeline-graph-container" data-coauthor='{{ coauthor_matrix | tojson}}' data-citation='{{ citation_matrix | tojson}}' data-categories="{{ categories }}">
     {# Graph will be added here #}
   </div>
 
@@ -88,5 +88,9 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+  window.TAXONOMY = {{ taxonomy | safe }};
+  console.log("taxonomy:", window.TAXONOMY);
+</script>
   <script type="module" src="{{ url_for('static', filename='scripts/timeline.mjs') }}"></script>
 {% endblock %}

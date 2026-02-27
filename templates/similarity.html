@@ -68,7 +68,7 @@
   {# Populate the Container with the graph here #}
   <div
     id="graphContainer"
-    data-similarity="{{ similarity_data }}"
+    data-similarity='{{ similarity_data | tojson }}'
     data-info-circle-path="{{ url_for('static', filename='images/info-circle.svg')}}"
   ></div>
 
@@ -105,6 +105,10 @@
 </div>
 
 {% endblock content %} {% block scripts %}
+<script>
+  window.TAXONOMY = {{ taxonomy | safe }};
+  console.log("taxonomy:", window.TAXONOMY);
+</script>
 <script
   type="module"
   src="{{ url_for('static', filename='scripts/similarity.mjs') }}"
