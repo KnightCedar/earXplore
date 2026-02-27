@@ -1,7 +1,7 @@
 database-path: health_data/health_health_tracking.csv
 explanations-path: health_data/explanations_health.csv
 
-advanced-sidebar-categories: ["Authors", "Study Link", "AUC"]
+advanced-sidebar-categories: ["AUC"]
 select-deselect-all-categories: ["Year", "Health Indicator", "Sensor Position", "Sensor Type", "Physiological Signal", "Advantage"]
 start-category-filters: ["Year","Health Indicator"]
-excluded-sidebar-categories: ["ID"]
+excluded-sidebar-categories: ["ID","Authors","Study Link"]

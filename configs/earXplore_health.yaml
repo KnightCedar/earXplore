@@ -1,7 +1,8 @@
 database-path: health_data/health_application.csv
 explanations-path: health_data/explanations_health.csv
 
-advanced-sidebar-categories: ["ID","Authors","Study Link","Main Author"]
+advanced-sidebar-categories: ["Main Author"]
+excluded-sidebar-categories: ["ID","Authors","Study Link"]
 select-deselect-all-categories: []
 abstract-similarity-path: abstract_similarity_datasets/normalized_abstract_similarity_health.csv
 database-similarity-path: database_similarity_datasets/normalized_database_similarity_health.csv

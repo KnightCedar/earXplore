@@ -1,6 +1,7 @@
 database-path: health_data/health_cardio_respiratory.csv
 explanations-path: health_data/explanations_health.csv
 
-advanced-sidebar-categories: ["Authors","Study Link","Single-ear R-peak detection F1 score", "Single-ear heart rate error", "Cross-ear R-peak detection F1 score","Cross-ear heart rate error", "Accuracy","Median Error","MAPE","MAE(Sitting)","MAE(walking)","MAD(motion)","SBP MAE","DBP MAE","SBP AE","DBP AE","SBP SD","DBP SD","SBP MAD","DBP MAD","Synchronization Accuracy","ME","RMSE","RR MAPE","RR MAE","RR ME","IER Error","TV MAPE","Breathing Phase F1","Inspiratory time MAE"]
+advanced-sidebar-categories: ["Single-ear R-peak detection F1 score", "Single-ear heart rate error", "Cross-ear R-peak detection F1 score","Cross-ear heart rate error", "Accuracy","Median Error","MAPE","MAE(Sitting)","MAE(walking)","MAD(motion)","SBP MAE","DBP MAE","SBP AE","DBP AE","SBP SD","DBP SD","SBP MAD","DBP MAD","Synchronization Accuracy","ME","RMSE","RR MAPE","RR MAE","RR ME","IER Error","TV MAPE","Breathing Phase F1","Inspiratory time MAE"]
 select-deselect-all-categories: ["Year", "Health Indicator", "Sensor Position", "Sensor Type", "Physiological Signal", "Advantage"]
 start-categories-filters: ["Year", "Health Indicator", "Sensor Position", "Sensor Type", "Physiological Signal", "Advantage"]
+excluded-sidebar-categories: ["ID","Authors","Study Link"]
