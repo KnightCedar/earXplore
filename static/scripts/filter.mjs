@@ -137,6 +137,8 @@ $(document).ready(function () {
 
     // Keep UI consistent
     applyCheckboxStates(f.categoryFilters);
+
+    $(".form-check-input.column-filter").first().trigger("change");
   });
 
   // Deselect All (but keep INFO)
@@ -152,6 +154,8 @@ $(document).ready(function () {
     saveFilters(f);
 
     applyCheckboxStates(f.categoryFilters);
+
+    $(".form-check-input.column-filter").first().trigger("change");
   });
 
   // Reset columns to backend startCategories (but do NOT clear value/range/exclusive filters)
@@ -163,6 +167,8 @@ $(document).ready(function () {
     saveFilters(f);
 
     applyCheckboxStates(f.categoryFilters);
+
+    $(".form-check-input.column-filter").first().trigger("change");
   });
 
   // Toggle menu visibility
