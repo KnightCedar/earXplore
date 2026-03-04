@@ -31,7 +31,7 @@
   </button>
 
   <!-- Toggle Menu Select/Deselect All Buttons -->
-  <div id="toggle-menu-container" data-start-categories="{{ start_categories }}" data-question-circle-path="{{ url_for('static', filename='images/question-circle-fill.svg') }}">
+  <div id="toggle-menu-container" data-start-categories='{{ start_categories | tojson }}' data-question-circle-path="{{ url_for('static', filename='images/question-circle-fill.svg') }}">
     <div class="select-buttons mb-4 mt-4">
       <button type="button" class="select-button" id="toggleSelectAllColumns">Select All</button>
       <button type="button" class="select-button" id="toggleDeselectAllColumns">Deselect All</button>

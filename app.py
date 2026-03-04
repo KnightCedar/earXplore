@@ -127,7 +127,7 @@ def load_data(config_path):
     PARENTHICAL_COLUMNS = config.get("parenthical-columns", [])
     SELECT_DESELECT_ALL_PANELS = config.get("select-deselect-all-panels", [])
     INITIALLY_HIDDEN_PANELS = config.get("initially-hidden-panels", [])
-    START_CATEGORY_FILTERS = json.dumps(["INFO"] + config.get("start-category-filters", []))
+    START_CATEGORY_FILTERS = ["INFO"] + config.get("start-category-filters", [])
     SPECIAL_FORMAT_EXPLANATIONS = config.get("special-format-explanations", [])
    
 
@@ -785,41 +785,6 @@ def health_sensor_position_view():
         filter_categories=json.dumps(filter_categories(data)),
         start_categories=START_CATEGORY_FILTERS,
         data_mode="health",
-        abstract_sim_path=abstract_sim_path, 
-        database_sim_path=database_sim_path,
-        citation_path = citation_path,
-        coauthor_path = coauthor_path,
-        hide_sidebar=True,
-    )
-
-@app.get("/sensor-position")
-def sensor_position_view():
-    config_path = os.path.join(
-        os.path.dirname(__file__),
-        "configs",
-        "earXplore_interaction.yaml"
-    )
-
-    data, explanations ,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
-    if not isinstance(data, list):
-        return render_template("error.html", error=data), 500
-    if not isinstance(explanations, dict):
-        return render_template("error.html", error=explanations), 500
-
-    sidebar_panels = generate_sidebar_panels(data, explanations)
-
-    return render_template(
-        "sensor-position.html",
-        current_view="sensorPositionView",
-        data=data,
-        sidebar_panels=sidebar_panels,
-        explanations=json.dumps(explanations),
-        abstracts=json.dumps(load_abstracts()),
-        titles=json.dumps(load_titles()),
-        parenthical_columns=json.dumps(PARENTHICAL_COLUMNS),
-        filter_categories=json.dumps(filter_categories(data)),
-        start_categories=START_CATEGORY_FILTERS,
-        data_mode="default",
         abstract_sim_path=abstract_sim_path, 
         database_sim_path=database_sim_path,
         citation_path = citation_path,
