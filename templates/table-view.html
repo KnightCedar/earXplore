@@ -18,7 +18,11 @@
 
     <p id="missing-category-filters" class="text-center">No studies available for the selected filters. Please select some of the criteria from the toggle menu at the top.</p>
     <p id="missing-value-filters" class="text-center">No studies available for the selected sidebar filters. Please select some of the criteria from the sidebar at the right.</p>
-    <p id="literature-info">EarXplore currently includes all relevant literature published before December 31, 2024</p>
+    {% if data_mode == "health" %}
+  <p id="literature-info">EarXplore currently includes all relevant literature published between 2021 and 2025(in health applicaiton mode)</p>
+{% else %}
+  <p id="literature-info">EarXplore currently includes all relevant literature published before December 31, 2024</p>
+{% endif %}
 
     <!-- Download Buttons -->
     <div class="d-flex mb-2 gap-2">
