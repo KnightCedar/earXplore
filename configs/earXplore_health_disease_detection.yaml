@@ -1,6 +1,0 @@
-database-path: health_data/health_disease_detection.csv
-explanations-path: health_data/explanations_health.csv
-
-advanced-sidebar-categories: ["Accuracy"]
-select-deselect-all-categories: ["Year", "Health Indicator", "Sensor Position", "Sensor Type", "Physiological Signal", "Advantage"]
-excluded-sidebar-categories: ["ID","Authors","Study Link"]

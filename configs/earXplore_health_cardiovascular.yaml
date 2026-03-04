@@ -5,3 +5,4 @@ explanations-path: health_data/explanations_health.csv
 select-deselect-all-categories: ["Year", "Health Indicator", "Sensor Position", "Sensor Type", "Physiological Signal", "Advantage","HRV Type"]  
 advanced-sidebar-categories: ["Single-Ear MAE","Cross-Ear MAE","MAE", "Median Error","RMSE","MAPE"]
 excluded-sidebar-categories: ["ID","Authors","Study Link"]
+start-category-filters: ["Main Author", "Year","Study Link","Health Indicator","Sensor Position","Sensor Type","Physiological Signal", "Advantage"]

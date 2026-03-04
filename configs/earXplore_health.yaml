@@ -3,7 +3,8 @@ explanations-path: health_data/explanations_health.csv
 
 advanced-sidebar-categories: ["Main Author"]
 excluded-sidebar-categories: ["ID","Authors","Study Link"]
-select-deselect-all-categories: []
+start-category-filters: ["Main Author", "Year","Study Link","Health Indicator","Sensor Position","Sensor Type","Physiological Signal", "Advantage"]
+select-deselect-all-categories: ["Year", "Health Indicator", "Sensor Position", "Sensor Type", "Physiological Signal","Advantage"]
 abstract-similarity-path: abstract_similarity_datasets/normalized_abstract_similarity_health.csv
 database-similarity-path: database_similarity_datasets/normalized_database_similarity_health.csv
 citation-matrix-path: interconnections_datasets/citation_matrix.csv
