@@ -95,7 +95,7 @@ function renderStudies(studies) {
   const listEl = document.getElementById("sensorPositionStudies");
   if (!listEl) return;
 
-  // 每次刷新列表，先清空详情
+  // Empty the Study Detail
   renderStudyDetail(null);
 
   if (!studies.length) {

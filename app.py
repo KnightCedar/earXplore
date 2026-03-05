@@ -424,7 +424,16 @@ def home():
     if success_message:
         print(f"Success message detected: {success_message}")
 
-    return render_template("table-view.html", current_view="tableView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), start_categories=START_CATEGORY_FILTERS, success_message=success_message, data_mode=data_mode,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path, citation_path = citation_path,coauthor_path = coauthor_path)
+    return render_template("table-view.html", 
+                           current_view="tableView", data=data, sidebar_panels=sidebar_panels, 
+                           explanations=explanations, abstracts=load_abstracts(database_path), 
+                           titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, 
+                           filter_categories=filter_categories(data), 
+                           start_categories=START_CATEGORY_FILTERS, 
+                           success_message=success_message, data_mode=data_mode,
+                           health_category = health_category,abstract_sim_path=abstract_sim_path, 
+                           database_sim_path=database_sim_path, 
+                           citation_path = citation_path, coauthor_path = coauthor_path)
 
 @app.get("/bar-chart")
 def bar_chart():
@@ -457,7 +466,15 @@ def bar_chart():
     if not isinstance(titles, list):
         return render_template("error.html", error=titles), 500
 
-    return render_template("bar-chart.html", current_view="chartView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), start_categories=START_CATEGORY_FILTERS, data_mode=data_mode,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path,citation_path = citation_path,coauthor_path = coauthor_path)
+    return render_template("bar-chart.html", 
+                           current_view="chartView", data=data, sidebar_panels=sidebar_panels, 
+                           explanations=explanations, abstracts=load_abstracts(database_path), 
+                           titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, 
+                           filter_categories=filter_categories(data), 
+                           start_categories=START_CATEGORY_FILTERS, data_mode=data_mode,
+                           health_category = health_category,abstract_sim_path=abstract_sim_path, 
+                           database_sim_path=database_sim_path,
+                          )
 
 @app.get("/similarity")
 def similarity():

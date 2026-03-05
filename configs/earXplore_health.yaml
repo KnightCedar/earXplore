@@ -7,7 +7,7 @@ start-category-filters: ["Main Author", "Year","Study Link","Health Indicator","
 select-deselect-all-categories: ["Year", "Health Indicator", "Sensor Position", "Sensor Type", "Physiological Signal","Advantage"]
 abstract-similarity-path: abstract_similarity_datasets/normalized_abstract_similarity_health.csv
 database-similarity-path: database_similarity_datasets/normalized_database_similarity_health.csv
-citation-matrix-path: interconnections_datasets/citation_matrix.csv
+citation-matrix-path: interconnections_datasets/citation_matrix_health.csv
 coauthor-matrix-path: interconnections_datasets/coauthor_matrix_health.csv
 
 
