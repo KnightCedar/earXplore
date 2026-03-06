@@ -30,6 +30,12 @@
   z-index: 10;           
 }
 
+.sensor-position-dot.is-active {
+  background: gold;          
+  border: 2px solid #d9534f;  
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
 #sensorPositionResults {
   flex: 0 0 520px;
   width: 520px;
