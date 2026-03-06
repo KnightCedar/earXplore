@@ -788,13 +788,10 @@ def health_sensor_position_view():
     if not isinstance(explanations, dict):
         return render_template("error.html", error=explanations), 500
 
-    sidebar_panels = generate_sidebar_panels(data, explanations)
-
     return render_template(
         "sensor-position.html",
         current_view="sensorPositionView",
         data=data,
-        sidebar_panels=sidebar_panels,
         explanations=json.dumps(explanations),
         abstracts=json.dumps(load_abstracts()),
         titles=json.dumps(load_titles()),
@@ -802,10 +799,6 @@ def health_sensor_position_view():
         filter_categories=json.dumps(filter_categories(data)),
         start_categories=START_CATEGORY_FILTERS,
         data_mode="health",
-        abstract_sim_path=abstract_sim_path, 
-        database_sim_path=database_sim_path,
-        citation_path = citation_path,
-        coauthor_path = coauthor_path,
         hide_sidebar=True,
     )
 
