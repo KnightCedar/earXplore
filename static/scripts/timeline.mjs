@@ -15,12 +15,10 @@ import {
 const FILTER_KEY = getFilterKey();
 
 $(document).ready(function () {
-  // Load data from the backend
-
   function buildMatrixIndex(matrix) {
     if (!Array.isArray(matrix) || matrix.length === 0) return null;
 
-    const header = matrix[0]; // ["", "ID1", "ID2", ...]
+    const header = matrix[0];
     const colIndex = {};
     for (let c = 1; c < header.length; c++) {
       colIndex[String(header[c]).trim()] = c;
@@ -28,7 +26,7 @@ $(document).ready(function () {
 
     const rowIndex = {};
     for (let r = 1; r < matrix.length; r++) {
-      rowIndex[String(matrix[r][0]).trim()] = r; // first column = row ID
+      rowIndex[String(matrix[r][0]).trim()] = r;
     }
 
     return { rowIndex, colIndex };
@@ -44,12 +42,81 @@ $(document).ready(function () {
 
     const value = matrix[r]?.[c];
 
-    // 兼容 0/1、字符串、空值
-    return value !== undefined &&
-           value !== null &&
-           String(value).trim() !== "" &&
-           Number(value) !== 0;
+    return (
+      value !== undefined &&
+      value !== null &&
+      String(value).trim() !== "" &&
+      Number(value) !== 0
+    );
   }
+
+  function getTimelineTableColumns() {
+    const mode = document.body.dataset.mode || "default";
+
+    if (mode === "health") {
+      return [
+        { key: "ID", label: "ID" },
+        { key: "Main Author", label: "Main Author" },
+        { key: "Year", label: "Year" },
+        { key: "Health Category", label: "Health Category" },
+        { key: "Health Indicator", label: "Health Indicator" },
+        { key: "Sensor Position", label: "Sensor Position" },
+        { key: "Sensor Type", label: "Sensor Type" },
+      ];
+    }
+
+    return [
+      { key: "ID", label: "ID" },
+      { key: "Main Author", label: "Main Author" },
+      { key: "Year", label: "Year" },
+      { key: "Location", label: "Location" },
+      { key: "Input Body Part", label: "Input Body Part" },
+      { key: "Gesture", label: "Gesture" },
+    ];
+  }
+
+  function renderTableHeaders(columns, includeConnectionType = false) {
+    const headerCells = columns
+      .map((col) => `<th class="centered-cell">${col.label}</th>`)
+      .join("");
+
+    const extraHeader = includeConnectionType
+      ? `<th class="centered-cell">Connection Type</th>`
+      : `<th class="centered-cell"></th>`;
+
+    return `
+      <tr>
+        <th class="centered-cell"></th>
+        ${headerCells}
+        ${extraHeader}
+      </tr>
+    `;
+  }
+
+  function renderTableRow(entry, columns, infoCirclePath, extraCellHtml = "") {
+    const safeEntry = entry || {};
+
+    const dataCells = columns
+      .map((col) => `<td class="centered-cell">${safeEntry[col.key] ?? "N/A"}</td>`)
+      .join("");
+
+    return `
+      <tr>
+        <td class="centered-cell">
+          <img
+            src="${infoCirclePath}"
+            alt="Info circle for this row"
+            title="View details"
+            data-id="${safeEntry["ID"] ?? ""}"
+            class="info-circle"
+          />
+        </td>
+        ${dataCells}
+        ${extraCellHtml || `<td class="centered-cell"></td>`}
+      </tr>
+    `;
+  }
+
   const coauthorMatrix = $("#timeline-graph-container").data("coauthor");
   const citationMatrix = $("#timeline-graph-container").data("citation");
   const coauthorIndex = buildMatrixIndex(coauthorMatrix);
@@ -59,10 +126,9 @@ $(document).ready(function () {
     "excluded-categories"
   );
   const infoCirclePath = $("#timelineConnectionsModal").data("info-circle-path");
-  // Citing order
+
   const citingOrder = { Cites: 0, "Cited By": 1, Coauthor: 2 };
-  
-  // Populate the timeline dropdown menu
+
   filterCategories.forEach((category) => {
     if (excludedCategories.includes(category)) return;
     const shortCategory = category.split("_").pop();
@@ -70,109 +136,82 @@ $(document).ready(function () {
       `<option value="${category}">${shortCategory}</option>`
     );
   });
-  
-  // Set the default value for the dropdown menu
+
   let colorCategory = window.sessionStorage.getItem("colorCategory") || "";
   $("#timelineColorCategory").val(colorCategory);
-  
-  // Set the shared authors option
+
   let showSharedAuthors =
     window.sessionStorage.getItem("showSharedAuthors") || "true";
   $("#timeline-toggle-shared-authors").prop(
     "checked",
     showSharedAuthors === "true"
   );
-  
-  // Set the current citation mode
+
   let citationMode = window.sessionStorage.getItem("citationMode") || "both";
   $(`#timeline-mode-${citationMode}`).prop("checked", true);
-  
+
+  function formatConnectionType(value) {
+    switch (value) {
+      case "Cites":
+        return "<span class='text-primary'>Cites</span>";
+      case "Cited By":
+        return "<span class='text-success'>Cited By</span>";
+      default:
+        return "<span class='text-secondary'>Shared Authors</span>";
+    }
+  }
+
   function showNetworkModal(id) {
-    // Get the data entry for the selected ID
     const entry = getDataEntry(id);
-  
-    // Get links which represent a citing relationship (the source cites the target)
+    const columns = getTimelineTableColumns();
+
     const citingLinks = d3
       .selectAll(".citing")
       .filter((d) => d.sourceID === id)
       .data();
-  
-    // Get links which represent a cited by relationship (the source is cited by the target)
+
     const citedByLinks = d3
       .selectAll(".cited-by")
       .filter((d) => d.sourceID === id)
       .data();
-  
-    // Get the links that represent a coauthor relationship
+
     const coauthorLinks = d3
       .selectAll(".coauthor")
       .filter((d) => d.sourceID === id)
       .data();
-  
-    // Combine target IDs that appear in more than one type of link
+
     const targetIDs = {};
-    citingLinks.forEach((link) =>
-      (targetIDs[link.targetID] = targetIDs[link.targetID] || []).push("Cites")
-    );
-    citedByLinks.forEach((link) =>
-      (targetIDs[link.targetID] = targetIDs[link.targetID] || []).push("Cited By")
-    );
-    coauthorLinks.forEach((link) =>
-      (targetIDs[link.targetID] = targetIDs[link.targetID] || []).push("Coauthor")
-    );
+    citingLinks.forEach((link) => {
+      (targetIDs[link.targetID] = targetIDs[link.targetID] || []).push("Cites");
+    });
+    citedByLinks.forEach((link) => {
+      (targetIDs[link.targetID] = targetIDs[link.targetID] || []).push("Cited By");
+    });
+    coauthorLinks.forEach((link) => {
+      (targetIDs[link.targetID] = targetIDs[link.targetID] || []).push("Coauthor");
+    });
+
     const orderedIDs = Object.keys(targetIDs).sort((a, b) => {
       if (targetIDs[a].length !== targetIDs[b].length) {
-        return targetIDs[b].length - targetIDs[a].length; // Sort by number of connections
+        return targetIDs[b].length - targetIDs[a].length;
       }
-      return citingOrder[targetIDs[a][0]] - citingOrder[targetIDs[b][0]]; // Sort by connection type priority
+      return citingOrder[targetIDs[a][0]] - citingOrder[targetIDs[b][0]];
     });
-  
-    const colgroupHTML = `
-      <colgroup>
-        <col style="width: 3%;">  <!-- Info icon column -->
-        <col style="width: 5%;"> <!-- ID column -->
-        <col style="width: 17%;"> <!-- Authors column -->
-        <col style="width: 8%;">  <!-- Year column -->
-        <col style="width: 15%;"> <!-- Location column -->
-        <col style="width: 12%;"> <!-- Body Part column -->
-        <col style="width: 18%;"> <!-- Gesture column -->
-        <col style="width: 10%;"> <!-- Empty column for alignment -->
-      </colgroup>
-    `;
-  
+
     const headerHTML = `
       <h5 class="mb-3 text-start">Selected Study</h5>
       <div class="table-responsive">
         <table class="table table-striped">
-          ${colgroupHTML}
           <thead>
-            <tr>
-              <th class="centered-cell" ></th>
-              <th class="centered-cell" >ID</th>
-              <th class="centered-cell" >Main Author</th>
-              <th class="centered-cell" >Year</th>
-              <th class="centered-cell" >Location</th>
-              <th class="centered-cell" >Input Body Part</th>
-              <th class="centered-cell" >Gesture</th>
-              <th class="centered-cell" ></th> <!-- Empty header for alignment -->
-            </tr>
+            ${renderTableHeaders(columns, false)}
           </thead>
           <tbody>
-            <tr class="selected-study-row">
-              <td class="centered-cell" ><img src="${infoCirclePath}" alt="Info cirle for this row" title="View details" data-ID=${entry["ID"]} class="info-circle"/></td>
-              <td class="centered-cell" >${entry["ID"]}</td>
-              <td class="centered-cell" >${entry["Main Author"]}</td>
-              <td class="centered-cell" >${entry["Year"]}</td>
-              <td class="centered-cell" >${entry["Location"]}</td>
-              <td class="centered-cell" >${entry["Input Body Part"]}</td>
-              <td class="centered-cell" >${entry["Gesture"]}</td>
-              <td class="centered-cell" ></td> <!-- Empty cell for alignment -->
-            </tr>
+            ${renderTableRow(entry, columns, infoCirclePath)}
           </tbody>
         </table>
       </div>
     `;
-  
+
     let connectionsHTML;
     if (
       citingLinks.length === 0 &&
@@ -186,38 +225,21 @@ $(document).ready(function () {
         <h5 class="mb-3 text-start">Study Network</h5>
         <div class="table-responsive">
           <table class="table table-striped">
-          ${colgroupHTML}
             <thead>
-              <tr>
-                <th class="centered-cell"></th>
-                <th class="centered-cell">ID</th>
-                <th class="centered-cell">Authors</th>
-                <th class="centered-cell">Year</th>
-                <th class="centered-cell">Location</th>
-                <th class="centered-cell">Body Part</th>
-                <th class="centered-cell">Gesture</th>
-                <th class="centered-cell">Connection Type</th>
-              </tr>
+              ${renderTableHeaders(columns, true)}
             </thead>
             <tbody>
               ${orderedIDs
                 .map((targetID) => {
-                  const entry = getDataEntry(targetID);
-                  return `
-                  <tr>
-                    <td class="centered-cell"><img src="${infoCirclePath}" alt="Info cirle for this row" title="View details" data-ID=${
-                    entry["ID"]
-                  } class="info-circle"/></td>
-                    <td class="centered-cell">${entry["ID"]}</td>
-                    <td class="centered-cell">${entry["Main Author"]}</td>
-                    <td class="centered-cell">${entry["Year"]}</td>
-                    <td class="centered-cell">${entry["Location"]}</td>
-                    <td class="centered-cell">${entry["Input Body Part"]}</td>
-                    <td class="centered-cell">${entry["Gesture"]}</td>
-                    <td class="centered-cell">${targetIDs[targetID]
+                  const targetEntry = getDataEntry(targetID);
+                  return renderTableRow(
+                    targetEntry,
+                    columns,
+                    infoCirclePath,
+                    `<td class="centered-cell">${targetIDs[targetID]
                       .map(formatConnectionType)
-                      .join(", ")}</td>
-                  </tr>`;
+                      .join(", ")}</td>`
+                  );
                 })
                 .join("\n")}
             </tbody>
@@ -228,48 +250,29 @@ $(document).ready(function () {
         } </p>
       `;
     }
-  
-    // Append the generated HTML to the modal and show it
+
     $("#timelineConnectionsContainer").html(headerHTML);
     $("#timelineConnectionsContainer").append(connectionsHTML);
     $("#timelineConnectionsModal").modal("show");
   }
-  
-  function formatConnectionType(value) {
-    switch (value) {
-      case "Cites":
-        return "<span class='text-primary'>Cites</span>";
-      case "Cited By":
-        return "<span class='text-success'>Cited By</span>";
-      default:
-        return "<span class='text-secondary'>Shared Authors</span>";
-    }
-  }
-  
-  /*
-   * Preparing the data for the timeline graph.
-   * The graph will be rendered using the coauthor and citation matrices.
-   */
+
   function generateTimelineData() {
-    // Get the currently active nodes based on the selected category and filters
     const activeNodes = filterData(
       JSON.parse(window.sessionStorage.getItem(FILTER_KEY))
     ).map((item) => item["ID"].toString());
-  
-    // Order the nodes by the selected category
+
     const { sortedNodes, colorScale } = sortNodesByCategory(
       activeNodes,
       colorCategory
     );
-  
-    // Append the year to each node
+
     const nodes = sortedNodes.map((node) => {
       return {
         id: node,
         year: getDataEntry(node, "Year"),
       };
     });
-  
+
     const years = {};
     nodes.forEach((node) => {
       if (!years[node.year]) {
@@ -278,31 +281,30 @@ $(document).ready(function () {
         years[node.year].push(node.id);
       }
     });
+
     const maxYears = Math.max(
       ...Object.keys(years).map((year) => years[year].length)
     );
-  
-    // Create links for co-authors and citations
+
     const links = { coauthorLinks: [], citingLinks: [], citedByLinks: [] };
     for (const node of sortedNodes) {
       for (const other of sortedNodes) {
         if (node === other) continue;
-        // Populate the links for co-authors
+
         if (hasEdge(coauthorMatrix, coauthorIndex, node, other)) {
           links.coauthorLinks.push({
             sourceID: node,
             targetID: other,
           });
         }
-  
-        // Populate the links for citations
+
         if (hasEdge(citationMatrix, citationIndex, node, other)) {
           links.citingLinks.push({
             sourceID: node,
             targetID: other,
           });
         }
-  
+
         if (hasEdge(citationMatrix, citationIndex, other, node)) {
           links.citedByLinks.push({
             sourceID: node,
@@ -311,7 +313,7 @@ $(document).ready(function () {
         }
       }
     }
-  
+
     return {
       nodes,
       years,
@@ -320,7 +322,7 @@ $(document).ready(function () {
       colorScale,
     };
   }
-  
+
   function drawTimelineGraph() {
     const headerHeight = $("header").outerHeight(true) || 0;
     const timelineControlsHeight = $(".timeline-controls").outerHeight(true) || 0;
@@ -328,8 +330,7 @@ $(document).ready(function () {
       window.innerWidth <= 750
         ? $("#visualization-warning").outerHeight(true) || 0
         : 0;
-  
-    // Clear the previous graph
+
     $("#timeline-graph-container").empty();
     $("#timeline-graph-container").height(
       `min(1000px, calc(90vh - ${
@@ -337,40 +338,34 @@ $(document).ready(function () {
       }px))`
     );
     $("#legend").empty();
-  
+
     const { nodes, years, links, maxYears, colorScale } = generateTimelineData();
     const { coauthorLinks, citingLinks, citedByLinks } = links;
-  
-    // If there are no nodes, do not draw the graph
+
     if (nodes.length === 0) {
       $("#timeline-graph-container").append(
         "<p class='m-2 p-0'>No studies available for the selected sidebar filters. Please select some of the criteria from the sidebar at the right.</p>"
       );
       return;
     }
-  
-    // Set up layout dimensions for the graph
+
     let margin =
       window.innerWidth <= 750
         ? { top: 5, right: 20, bottom: 30, left: 20 }
         : { top: 20, right: 50, bottom: 20, left: 50 };
     const containerWidth = $("#timeline-graph-container").width();
     const innerWidth = containerWidth - margin.left - margin.right;
-  
-    // Base node radius
+
     const nodeRadius = Math.min(12, innerWidth / 100);
-  
-    // Calculate height based on max years count
+
     const height = $("#timeline-graph-container").height();
     const innerHeight = height - margin.top - margin.bottom;
     const axisHeight = innerHeight;
-  
-    // get the current font size
+
     const responsiveFontSize = getComputedStyle(document.body)
       .getPropertyValue("--resp-font-ticks-bg")
       .trim();
-  
-    // Create the svg container for the timeline graph with responsive viewBox
+
     const svg = d3
       .select("#timeline-graph-container")
       .append("svg")
@@ -378,66 +373,57 @@ $(document).ready(function () {
       .attr("height", height)
       .attr("viewBox", `${margin.left} ${margin.top} ${innerWidth} ${height}`)
       .attr("preserveAspectRatio", "xMidYMid meet");
-  
-    // Create an x scale for the years
+
     const xScale = d3
       .scalePoint()
       .domain(Object.keys(years).map(Number))
       .range([0, innerWidth]);
-  
-    // Create a y scale for the nodes
+
     const yScale = d3
       .scaleLinear()
       .domain([0, maxYears])
       .range([axisHeight - margin.bottom, 0]);
-  
-    // Append group element to svg for zooming
+
     const g = svg
       .append("g")
       .attr("transform", `translate (${margin.left}, ${margin.top})`);
-  
-    // Create an x axis for the years
+
     const xAxis = d3
       .axisBottom(xScale)
       .tickFormat(d3.format("d"))
-      .tickSize(window.innerWidth <= 750 ? 0 : 5); // Set tickSize to 0 as we'll draw our own ticks
-  
-    // Draw just the x axis line
+      .tickSize(window.innerWidth <= 750 ? 0 : 5);
+
     g.append("g")
       .attr("class", "x-axis")
       .attr("transform", `translate(0, ${axisHeight})`)
       .call(xAxis)
       .call((g) => {
-        // Keep only the domain line and remove default ticks when screen is small
         if (window.innerWidth <= 750) {
           g.select(".domain").attr("stroke", "#000");
           g.selectAll(".tick").remove();
-  
-          // Add custom alternating ticks
+
           const yearValues = Object.keys(years)
             .map(Number)
             .sort((a, b) => a - b);
-  
+
           g.selectAll(".custom-tick")
             .data(yearValues)
             .join("g")
             .attr("class", "custom-tick")
             .attr("transform", (d) => `translate(${xScale(d)}, 0)`)
             .each(function (d, i) {
-              const isAbove = i % 2 === 0; // Alternates based on index
+              const isAbove = i % 2 === 0;
               const tick = d3.select(this);
-  
+
               const tickSize = 5;
               const textOffset = 8;
-  
-              // Add tick line
+
               tick
                 .append("line")
                 .attr("class", "tick-line")
                 .attr("y1", 1)
                 .attr("y2", isAbove ? -tickSize : tickSize);
-  
-              // Add year text
+
               tick
                 .append("text")
                 .attr("class", "tick-text")
@@ -449,16 +435,12 @@ $(document).ready(function () {
             });
         }
       });
-  
-    // Create a link group for the links
+
     const linkGroup = g.append("g").attr("class", "links");
-  
-    // Create a node group for the nodes
     const nodeGroup = g.append("g").attr("class", "nodes");
-  
+
     const arc = d3.arc().innerRadius(0).outerRadius(nodeRadius);
-  
-    // Draw the nodes on the timeline
+
     nodeGroup
       .selectAll(".node")
       .data(nodes.map((node) => node.id))
@@ -475,39 +457,34 @@ $(document).ready(function () {
         showNetworkModal(d);
       })
       .on("mouseover", function (event, d) {
-        // Show the tooltip next to the node
         nodeTooltip.style("visibility", "visible");
         nodeTooltip.style("left", `${event.pageX + 15}px`);
         nodeTooltip.style("top", `${event.pageY}px`);
-  
-        // Populate the tooltip with the node data
+
         const entry = getDataEntry(d);
         nodeTooltip.html(`
           <strong>Study ${entry["ID"]}</strong>
           <p>${entry["Main Author"]} (${entry["Year"]})</p>
           <p>Location: ${entry["Location"]}</p>
-          `);
-  
-        // Highlight the node and its connections
+        `);
+
         highlightNode(
           d,
           nodeRadius,
           citationMode === "cited-by" || citationMode === "cites"
         );
       })
-      .on("mouseout", function (event, d) {
-        // Hide the tooltip when the mouse leaves the node
+      .on("mouseout", function () {
         nodeTooltip.style("visibility", "hidden");
         removeHighlighting(nodeRadius);
       });
-  
+
     const nodeTooltip = d3
       .select("#timeline-graph-container")
       .append("div")
       .attr("class", "node-tooltip")
       .style("visibility", "hidden");
-  
-    // Draw the links between the nodes
+
     if (showSharedAuthors === "true") {
       linkGroup
         .selectAll(".link .coauthor")
@@ -516,7 +493,7 @@ $(document).ready(function () {
         .attr("class", "coauthor link")
         .attr("d", (d) => drawLink(d));
     }
-  
+
     if (citationMode === "both" || citationMode === "cites") {
       linkGroup
         .selectAll(".link .citing")
@@ -525,7 +502,7 @@ $(document).ready(function () {
         .attr("class", "citing link")
         .attr("d", (d) => drawLink(d));
     }
-  
+
     if (citationMode === "both" || citationMode === "cited-by") {
       linkGroup
         .selectAll(".link .cited-by")
@@ -534,7 +511,7 @@ $(document).ready(function () {
         .attr("class", "cited-by link")
         .attr("d", (d) => drawLink(d));
     }
-  
+
     function drawLink(d) {
       const sourceNode = nodes.find((node) => node.id === d.sourceID);
       const targetNode = nodes.find((node) => node.id === d.targetID);
@@ -542,73 +519,49 @@ $(document).ready(function () {
       const targetX = xScale(targetNode.year);
       const sourceY = yScale(years[sourceNode.year].indexOf(sourceNode.id));
       const targetY = yScale(years[targetNode.year].indexOf(targetNode.id));
-  
+
       if (sourceX === targetX) {
-        // If the souce and target are in the same year, draw an arc
         const midY = (sourceY + targetY) / 2;
         return `M ${sourceX},${sourceY} Q ${Math.min(
           sourceX + xScale.step(),
           $("#timeline-graph-container").width() - margin.right / 2
         )},${midY} ${targetX},${targetY}`;
       } else {
-        // For different years, create a bezier curve
         const dx = targetX - sourceX;
-        const controlOffset = Math.min(Math.abs(dx) * 0.4, 100); // Limit control point offset
-  
-        // Calculate control points - higher curves for connections between distant years
+        const controlOffset = Math.min(Math.abs(dx) * 0.4, 100);
+
         const controlX1 = sourceX + Math.sign(dx) * controlOffset;
-        const controlY1 = sourceY - 40; // Curve upward
+        const controlY1 = sourceY - 40;
         const controlX2 = targetX - Math.sign(dx) * controlOffset;
-        const controlY2 = targetY - 40; // Curve upward
-  
-        // If the source and target are in different years, draw a bezier curve
+        const controlY2 = targetY - 40;
+
         return `M ${sourceX},${sourceY} C ${controlX1},${controlY1} ${controlX2},${controlY2} ${targetX},${targetY}`;
       }
     }
-  
-    // Add hover title to links
+
     linkGroup
       .selectAll(".citing")
       .append("title")
       .text((d) => `[${d.sourceID}] cites [${d.targetID}]`);
-  
+
     linkGroup
       .selectAll(".cited-by")
       .append("title")
       .text((d) => `[${d.sourceID}] is cited by [${d.targetID}]`);
-  
+
     linkGroup
       .selectAll(".coauthor")
       .append("title")
       .text((d) => `[${d.sourceID}] shares authors with [${d.targetID}]`);
-  
-    // Create a legend for the colors
+
     createLegend(
       nodes.map((node) => node.id),
       colorScale,
       colorCategory,
       $("#legend")
     );
-  
-    // Add zooming functionality at lower screen sizes
-    // Uncomment for enabling zoom on mobile devices
-    // const mobileQuery = window.matchMedia("(max-width: 850px)");
-  
-    // if (mobileQuery.matches) {
-    //   const zoom = d3
-    //     .zoom()
-    //     .scaleExtent([0.8, 10])
-    //     .on("zoom", ({ transform }) => {
-    //       // On mobile allow panning/zooming
-    //       const x = margin.left + transform.x;
-    //       const y = margin.top + transform.y;
-    //       const k = transform.k;
-    //       g.attr("transform", `translate(${x}, ${y}) scale(${k})`);
-    //     });
-  
-    //   svg.call(zoom).call(zoom.transform, d3.zoomIdentity);
-    // }
   }
+
   drawTimelineGraph();
 
   $("#timeline-toggle-shared-authors").on("click", function () {
@@ -623,7 +576,6 @@ $(document).ready(function () {
     drawTimelineGraph();
   });
 
-  // Set the coloring strategy to the session storage
   $("#timelineColorCategory").on("change", function () {
     colorCategory = $(this).val();
     window.sessionStorage.setItem("colorCategory", colorCategory);
@@ -648,11 +600,8 @@ $(document).ready(function () {
     });
   });
 
-  // Handle clicks on the info circles in the connections modal
   $("#timelineConnectionsContainer").on("click", ".info-circle", function () {
     const id = $(this).data("id");
-
-    // Close the network modal if it's open
     $("#timelineConnectionsModal").modal("hide");
     showStudyModal(id);
   });
