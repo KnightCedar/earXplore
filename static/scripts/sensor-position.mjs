@@ -110,6 +110,7 @@ function renderStudies(studies) {
       const id = s.ID ?? `#${idx + 1}`;
       const pos = s[SENSOR_POSITION_COLUMN] ?? "";
       const year = s.Year ?? "";
+      const mainAuthor = s["Main Author"] ?? "";
       return `
         <button
           type="button"
@@ -117,7 +118,7 @@ function renderStudies(studies) {
           data-idx="${idx}"
           style="display:block;width:100%;text-align:left;padding:10px;border:1px solid #eee;border-radius:10px;margin:8px 0;background:white;cursor:pointer;"
         >
-          <div style="font-weight:600;">Study ${escapeHtml(id)}</div>
+          <div style="font-weight:600;">Study ${escapeHtml(id)}-${escapeHtml(mainAuthor)}</div>
           <div style="font-size:12px;opacity:.8;">${escapeHtml(year)}${year ? " · " : ""}${escapeHtml(pos)}</div>
         </button>
       `;
