@@ -1,14 +1,28 @@
 #sensorPositionViewContainer {
   display: flex;
+  flex-wrap: wrap;
   gap: 24px;
   justify-content: center;
-  align-items: flex-start;      
+  align-items: flex-start;
+}
+
+#sensorPositionViewContainer.no-selection {
+  justify-content: center;
+}
+
+#sensorPositionViewContainer.no-selection #sensorPositionResults {
+  display: none;
+}
+
+#sensorPositionViewContainer.has-selection {
+  justify-content: center;
 }
 
 /* Fixed distance to the left */
 #earWrapper {
-  flex: 0 0 400px;              
-  width: 400px;
+  flex: 0 1 420px;
+  width: 100%;
+  max-width: 420px;
   position: relative;
 }
 
@@ -37,9 +51,9 @@
 }
 
 #sensorPositionResults {
-  flex: 0 0 520px;
-  width: 520px;
+  flex: 1 1 480px;
   max-width: 520px;
+  width: 100%;
 }
 
 #sensorPositionStudyDetail {
@@ -66,4 +80,21 @@
   max-height: 260px;      /* Control the height of related studies */
   overflow-y: auto;   
   margin-bottom: 12px;
+}
+
+#earArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#sensorPositionHint {
+  font-weight: 600;
+  font-size: 35px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#sensorPositionViewContainer.has-selection #sensorPositionHint {
+  display: none;
 }

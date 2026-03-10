@@ -7,10 +7,10 @@ const SENSOR_POSITION_COLUMN = "Sensor Position";
 // Position of dots
 const sensorPositions = [
   { id: "helix", label: "On the ear helix", x: 37, y: 53, value: "On the ear helix" },
-  { id: "ear_canal", label: "Ear Canal", x: 55, y: 54.8, value: "Ear Canal" },
+  { id: "ear_canal", label: "Ear Canal", x: 55, y: 64, value: "Ear Canal" },
   { id: "behind_the_ear", label: "Behind the ear", x: 62.5, y: 80, value: "Behind the ear" },
   { id: "around_the_ear", label: "Around the ear", x: 58, y: 28.5, value: "Around the ear" },
-  { id: "ear_concha", label: "Ear Concha", x: 48, y: 47.5, value: "Ear Concha" },
+  { id: "ear_concha", label: "Ear Concha", x: 51, y: 50, value: "Ear Concha" },
   { id: "earlobe", label: "Earlobe", x: 53, y: 77, value: "Earlobe" },
   { id: "headphone_type", label: "Headphone type", x: 43, y: 11.5, value: "Headphone type" },
   { id: "head_mounted", label: "Head-mounted", x: 43, y: 5, value: "Head-mounted" },
@@ -42,6 +42,7 @@ function escapeHtml(s) {
     .replaceAll("'", "&#39;");
 }
 
+// Render the study information table
 function renderStudyDetail(study) {
   const detailEl = document.getElementById("sensorPositionStudyDetail");
   const detailTitleEl = document.getElementById("sensorPositionDetailTitle");
@@ -61,7 +62,7 @@ function renderStudyDetail(study) {
     const raw = study[k];
     const valueStr = Array.isArray(raw) ? raw.join(", ") : String(raw ?? "");
 
-    // 自动识别链接
+    // Automatic link detection
     const trimmed = valueStr.trim();
     const isLink = /^https?:\/\//i.test(trimmed);
 
@@ -150,6 +151,12 @@ function setActiveDot(activeId) {
 // Select the position
 function onSelectPosition(pos) {
   setActiveDot(pos.id);
+
+  const container = document.getElementById("sensorPositionViewContainer");
+  if (container) {
+    container.classList.remove("no-selection");
+    container.classList.add("has-selection");
+  }
 
   const titleEl = document.getElementById("sensorPositionTitle");
   if (titleEl) titleEl.textContent = `Selected: ${pos.label}`;

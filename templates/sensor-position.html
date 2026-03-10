@@ -10,15 +10,23 @@
   <script id="sensorPositionData" type="application/json">
     {{ data | tojson }}
   </script>
+  
 
-  <div id="sensorPositionViewContainer">
-    <div id="earWrapper">
-      <img
-        id="earImage"
-        src="{{ url_for('static', filename='images/ear_sensor_map.png') }}"
-        alt="Ear Sensor Position Map"
-      />
-      <!-- sensor dots injected by JS -->
+
+  <div id="sensorPositionViewContainer" class="no-selection">
+    <div id="earArea">
+      <div id="sensorPositionHint">
+      Click a red dot on the ear to explore related studies.
+      </div>
+      <div id="earWrapper">
+        <img
+          id="earImage"
+          src="{{ url_for('static', filename='images/ear_sensor_map.png') }}"
+          alt="Ear Sensor Position Map"
+        />
+        <!-- sensor dots injected by JS -->
+        
+      </div>
     </div>
 
     <div id="sensorPositionResults">
