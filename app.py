@@ -107,16 +107,12 @@ def load_data(config_path):
         with open(config_path, 'r') as f:
             config = yaml.safe_load(f)
     except FileNotFoundError:
-        return f"Configuration file {config_path} not found", None, None, None ,None, None, None, None
+        return f"Configuration file {config_path} not found", None, None
     except yaml.YAMLError as e:
-        return f"Error parsing configuration file {config_path}: {e}", None, None, None ,None, None, None, None
+        return f"Error parsing configuration file {config_path}: {e}", None, None
     
     database_path = config.get("database-path", "data.csv")
     explanations_path = config.get("explanations-path", "explanations.csv")
-    abstract_sim_path = config.get("abstract-similarity-path","abstract_similarity_datasets/normalized_abstract_similarity.csv")
-    database_sim_path = config.get("database-similarity-path","database_similarity_datasets/normalized_database_similarity.csv")
-    citation_path = config.get("citation-matrix-path", "interconnections_datasets/citation_matrix.csv")
-    coauthor_path = config.get("coauthor-matrix-path", "interconnections_datasets/coauthor_matrix.csv")
 
     global EXCLUDED_SIDEBAR_CATEGORIES, ADVANCED_SIDEBAR_CATEGORIES, SLIDER_CATEGORIES, SELECT_DESELECT_ALL_CATEGORIES, EXCLUSIVE_FILTERING_CATEGORIES, PARENTHICAL_COLUMNS, SELECT_DESELECT_ALL_PANELS, INITIALLY_HIDDEN_PANELS, START_CATEGORY_FILTERS, SPECIAL_FORMAT_EXPLANATIONS
     EXCLUDED_SIDEBAR_CATEGORIES = config.get("excluded-sidebar-categories", [])
@@ -139,11 +135,11 @@ def load_data(config_path):
         df = df.replace('nan', 'N/A')  # Replace string 'nan' values
         data = df.to_dict(orient="records")
     except FileNotFoundError:
-        return "data.csv file not found", None, None, None ,None, None, None, None
+        return "data.csv file not found", None, None
     except pd.errors.EmptyDataError:
-        return "data.csv file is empty", None, None, None ,None, None, None, None
+        return "data.csv file is empty", None, None
     except Exception as e:
-        return f"Error loading data.csv: {e}", None, None, None ,None, None, None, None
+        return f"Error loading data.csv: {e}", None, None
     
     # delete the 'Abstract' column from the data
     for data_entry in data:
@@ -161,16 +157,16 @@ def load_data(config_path):
         explanations_df = pd.read_csv(csv_path)
         explanations = dict(zip(explanations_df["Column"], explanations_df["Explanation"]))
     except FileNotFoundError:
-        return "explanations.csv file not found", None, None, None, None, None, None, None
+        return "explanations.csv file not found", None, None
     except pd.errors.EmptyDataError:
-        return "explanations.csv file is empty", None, None, None, None, None, None, None
+        return "explanations.csv file is empty", None, None
     except KeyError:
-        return "explanations.csv file is missing required columns", None, None, None, None, None, None, None
+        return "explanations.csv file is missing required columns", None, None
     except Exception as e:
-        return f"Error loading explanations.csv: {e}", None, None, None, None, None, None, None
+        return f"Error loading explanations.csv: {e}", None, None
     
 
-    return data, explanations, database_path, abstract_sim_path, database_sim_path, citation_path, coauthor_path
+    return data, explanations, database_path
 
 def load_abstracts(database_path="data.csv"):
     try:
@@ -410,7 +406,7 @@ def home():
     print("HOME ROUTE NEW VERSION")
     data_mode, health_category, config_file = resolve_config()
     config_path = os.path.join(os.path.dirname(__file__), "configs", config_file)
-    data, explanations, database_path, abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
+    data, explanations, database_path= load_data(config_path=config_path)
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     
@@ -431,9 +427,7 @@ def home():
                            filter_categories=filter_categories(data), 
                            start_categories=START_CATEGORY_FILTERS, 
                            success_message=success_message, data_mode=data_mode,
-                           health_category = health_category,abstract_sim_path=abstract_sim_path, 
-                           database_sim_path=database_sim_path, 
-                           citation_path = citation_path, coauthor_path = coauthor_path)
+                           health_category = health_category)
 
 @app.get("/bar-chart")
 def bar_chart():
@@ -443,7 +437,7 @@ def bar_chart():
         "configs",
         config_file
     )
-    data, explanations , database_path, abstract_sim_path, database_sim_path,citation_path,coauthor_path = load_data(config_path=config_path)
+    data, explanations , database_path = load_data(config_path=config_path)
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     
@@ -472,8 +466,7 @@ def bar_chart():
                            titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, 
                            filter_categories=filter_categories(data), 
                            start_categories=START_CATEGORY_FILTERS, data_mode=data_mode,
-                           health_category = health_category,abstract_sim_path=abstract_sim_path, 
-                           database_sim_path=database_sim_path,
+                           health_category = health_category
                           )
 
 @app.get("/similarity")
@@ -486,7 +479,11 @@ def similarity():
         "configs",
         config_file
     )
-    data, explanations ,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
+    data, explanations ,database_path= load_data(config_path=config_path)
+    with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+    abstract_sim_path = config.get("abstract-similarity-path","abstract_similarity_datasets/normalized_abstract_similarity.csv")
+    database_sim_path = config.get("database-similarity-path","database_similarity_datasets/normalized_database_similarity.csv")
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     
@@ -501,7 +498,7 @@ def similarity():
     
     excluded_categories = EXCLUDED_SIDEBAR_CATEGORIES + ADVANCED_SIDEBAR_CATEGORIES + ["Year"]
 
-    return render_template("similarity.html", current_view="similarityView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), similarity_data=similarity_data, excluded_categories=excluded_categories, data_mode=data_mode,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path,citation_path = citation_path,coauthor_path = coauthor_path)
+    return render_template("similarity.html", current_view="similarityView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), similarity_data=similarity_data, excluded_categories=excluded_categories, data_mode=data_mode,health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path)
 
 @app.get("/timeline")
 def timeline():
@@ -513,8 +510,11 @@ def timeline():
         "configs",
         config_file
     )
-    data, explanations ,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path= load_data(config_path=config_path)
-    
+    data, explanations ,database_path= load_data(config_path=config_path)
+    with open(config_path, 'r') as f:
+                config = yaml.safe_load(f)
+    citation_path = config.get("citation-matrix-path", "interconnections_datasets/citation_matrix.csv")
+    coauthor_path = config.get("coauthor-matrix-path", "interconnections_datasets/coauthor_matrix.csv")
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     
@@ -539,7 +539,7 @@ def timeline():
         return render_template("error.html", error=coauthor_matrix), 500
     excluded_categories = EXCLUDED_SIDEBAR_CATEGORIES + ADVANCED_SIDEBAR_CATEGORIES + ["Year"]
 
-    return render_template("timeline.html", current_view="timeView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), citation_matrix=citation_matrix, coauthor_matrix=coauthor_matrix, excluded_categories=excluded_categories, data_mode=data_mode, health_category = health_category,abstract_sim_path=abstract_sim_path, database_sim_path=database_sim_path,citation_path = citation_path,coauthor_path = coauthor_path)
+    return render_template("timeline.html", current_view="timeView", data=data, sidebar_panels=sidebar_panels, explanations=explanations, abstracts=load_abstracts(database_path), titles=load_titles(database_path), parenthical_columns=PARENTHICAL_COLUMNS, filter_categories=filter_categories(data), citation_matrix=citation_matrix, coauthor_matrix=coauthor_matrix, excluded_categories=excluded_categories, data_mode=data_mode, health_category = health_category,citation_path = citation_path,coauthor_path = coauthor_path)
 
 @app.get('/add_study')
 def add_study():
@@ -782,7 +782,7 @@ def health_sensor_position_view():
         "earXplore_health.yaml"
     )
 
-    data, explanations,database_path,abstract_sim_path, database_sim_path, citation_path,coauthor_path = load_data(config_path=config_path)
+    data, explanations,database_path= load_data(config_path=config_path)
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     if not isinstance(explanations, dict):
@@ -793,8 +793,8 @@ def health_sensor_position_view():
         current_view="sensorPositionView",
         data=data,
         explanations=json.dumps(explanations),
-        abstracts=json.dumps(load_abstracts()),
-        titles=json.dumps(load_titles()),
+        abstracts=load_abstracts(database_path),
+        titles=load_titles(database_path),
         parenthical_columns=json.dumps(PARENTHICAL_COLUMNS),
         filter_categories=json.dumps(filter_categories(data)),
         start_categories=START_CATEGORY_FILTERS,
