@@ -56,7 +56,6 @@
   data-parenthical-categories='{{ parenthical_columns | tojson | safe }}'
   data-explanations='{{ explanations | tojson | safe }}'
   data-mode="{{ data_mode | default('default') }}"
-  data-hide-sidebar="{{ hide_sidebar | default(false) }}"
 >
     {# Success Message Alert #} {% if success_message %}
     <div
@@ -97,9 +96,7 @@
       }
     </script>
     {% endif %} {# Mask for the Sidebar #}
-    {% if not hide_sidebar %}
     <div id="mask"></div>
-    {% endif %}
 
     {# Left Section #}
     <div class="left-section">
@@ -257,7 +254,6 @@
             not display visually appealing on smaller devices.</span
           >
         </div>
-        {% if not hide_sidebar %}
         <div id="toggle-sidebar">
           <button id="toggle-sidebar-btn">
             Toggle Sidebar
@@ -269,13 +265,11 @@
             />
           </button>
         </div>
-        {% endif %}
         {# Dynamic View Section #} {% block content %} {% endblock content %}
       </main>
     </div>
 
     {# Sidebar #}
-    {% if not hide_sidebar %}
     <aside id="sidebar">
       {# Sidebar Close Button for smaller Screens #}
       <div class="sidebar-buttons">
@@ -451,7 +445,6 @@
       </div>
       {% endfor %}
     </aside>
-    {% endif %}
 
     {# Modal for study information #}
     <div

@@ -783,6 +783,7 @@ def health_sensor_position_view():
     )
 
     data, explanations,database_path= load_data(config_path=config_path)
+    sidebar_panels = generate_sidebar_panels(data, explanations)
     if not isinstance(data, list):
         return render_template("error.html", error=data), 500
     if not isinstance(explanations, dict):
@@ -791,15 +792,14 @@ def health_sensor_position_view():
     return render_template(
         "sensor-position.html",
         current_view="sensorPositionView",
-        data=data,
+        data=data, sidebar_panels=sidebar_panels,
         explanations=json.dumps(explanations),
         abstracts=load_abstracts(database_path),
         titles=load_titles(database_path),
         parenthical_columns=json.dumps(PARENTHICAL_COLUMNS),
         filter_categories=json.dumps(filter_categories(data)),
         start_categories=START_CATEGORY_FILTERS,
-        data_mode="health",
-        hide_sidebar=True,
+        data_mode="health"
     )
 
 
