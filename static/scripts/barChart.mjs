@@ -7,9 +7,7 @@ import {
   getFilterKey
 } from "./dataUtility.mjs";
 
-
 const FILTER_KEY = getFilterKey();
-
 
 /*
 Intialization of the interactive elements
@@ -26,65 +24,124 @@ $(document).ready(function () {
     "question-circle-path"
   );
   const explanations = $("body").data("explanations");
-  
+
   /*
     Section for the Modal setup
     - The modal opens up when a bar in a chart is clicked
     - The modal contains a table with the details of the studies that match the clicked bar's label
-    - The table contains the following columns: ID, Main Author, Year, Location, Input Body Part, Gesture
+    - In health mode, the table shows:
+      ID, Main Author, Year, Health Category, Health Indicator, Sensor Position, Sensor Type
+    - In non-health mode, the table shows:
+      ID, Main Author, Year, Location, Input Body Part, Gesture
     - In the table, the info-circle in each row can be clicked to open another modal with more information about the study
   */
-  
+
+  function isHealthMode() {
+    const bodyMode =
+      $("body").data("mode") ||
+      $("body").data("page-mode") ||
+      $("body").data("dataset-mode") ||
+      "";
+
+    if (
+      typeof bodyMode === "string" &&
+      bodyMode.toLowerCase().includes("health")
+    ) {
+      return true;
+    }
+
+    const healthColumns = [
+      "Health Category",
+      "Health Indicator",
+      "Sensor Position",
+      "Sensor Type"
+    ];
+
+    return healthColumns.every((col) => categories.includes(col));
+  }
+
+  function getModalColumns() {
+    if (isHealthMode()) {
+      return [
+        "ID",
+        "Main Author",
+        "Year",
+        "Health Category",
+        "Health Indicator",
+        "Sensor Position",
+        "Sensor Type"
+      ];
+    }
+
+    return [
+      "ID",
+      "Main Author",
+      "Year",
+      "Location",
+      "Input Body Part",
+      "Gesture"
+    ];
+  }
+
+  function matchesCategoryLabel(entry, fullCategory, label) {
+    const rawValue = entry[fullCategory];
+
+    if (rawValue === undefined || rawValue === null) {
+      return false;
+    }
+
+    const cleanedValues = cleanDataString(fullCategory, rawValue.toString());
+    return cleanedValues.includes(label);
+  }
+
   // Function to create Modal HTML for a given category and label
   function createModalHTML(category, label) {
     const activeData = filterData(
       JSON.parse(window.sessionStorage.getItem(FILTER_KEY))
     );
     const fullCategory = getFullCategory(category);
-  
+    const modalColumns = getModalColumns();
+    const infoCircleSrc = $("#table-modal-body").data("url-path-info-circle");
+
+    const filteredData = activeData.filter((entry) =>
+      matchesCategoryLabel(entry, fullCategory, label)
+    );
+
     const tableHTML = `
       <table class="table table-striped">
         <thead>
           <tr>
             <th></th>
-            <th>ID</th>
-            <th>Main Author</th>
-            <th>Year</th>
-            <th>Location</th>
-            <th>Input Body Part</th>
-            <th>Gesture</th>
+            ${modalColumns.map((column) => `<th>${column}</th>`).join("")}
           </tr>
         </thead>
         <tbody>
-          ${activeData
-            .filter((entry) => entry[fullCategory].toString().includes(label))
+          ${filteredData
             .map(
-              (elem) =>
-                `
-            <tr>
-              <td>
-                <img class="info-circle" src="${$("#table-modal-body").data(
-                  "url-path-info-circle"
-                )}" alt="Info cirle for this row" title="Information about this row" data-id="${
-                  elem["ID"]
-                }"/>
-              </td>
-              <td>${elem["ID"]}</td>
-              <td>${elem["Main Author"]}</td>
-              <td>${elem["Year"]}</td>
-              <td>${elem["Location"]}</td>
-              <td>${elem["Input Body Part"]}</td>
-              <td>${elem["Gesture"]}</td> 
-            </tr>
-            `
+              (elem) => `
+                <tr>
+                  <td>
+                    <img
+                      class="info-circle"
+                      src="${infoCircleSrc}"
+                      alt="Info circle for this row"
+                      title="Information about this row"
+                      data-id="${elem["ID"]}"
+                    />
+                  </td>
+                  ${modalColumns
+                    .map((column) => `<td>${elem[column] ?? ""}</td>`)
+                    .join("")}
+                </tr>
+              `
             )
             .join("")}
         </tbody>
       </table>
-      `;
+    `;
     return tableHTML;
   }
-  
+
   /*
     Section for the Bar Chart setup
     - The bar charts are created based on the data and categories as well as the filters set in the sidebar
@@ -92,7 +149,7 @@ $(document).ready(function () {
     - The charts are responsive and can be resized
     - ChartJS is used to create the bar charts, they suggest splitting the data creation and options creation into separate functions
   */
-  
+
   // Creates all bar charts based on the data passed by the server and the currently active filters (categories and value filters)
   function createBarCharts() {
     $("#chartsContainer").empty(); // Clear the charts container
@@ -100,15 +157,16 @@ $(document).ready(function () {
     const activeCategories = filters.categoryFilters
       .map((cat) => getFullCategory(cat))
       .filter((cat) => cat !== undefined);
+
     // Remove "Main Author" category if it is in the active categories
     const firstAuthorIndex = activeCategories.indexOf("Main Author");
     if (firstAuthorIndex !== -1) {
       activeCategories.splice(firstAuthorIndex, 1);
     }
-  
+
     // Filter the data so that only the entries that match the active categories and value filters are included
     const activeData = filterData(filters);
-  
+
     if (activeData.length === 0) {
       $("#hiddenChartsMessage").hide();
       $("#hiddenChartsList").empty();
@@ -117,7 +175,7 @@ $(document).ready(function () {
       );
       return;
     }
-  
+
     if (activeCategories.length === 0) {
       // Reset the hidden charts message and list
       $("#hiddenChartsMessage").hide();
@@ -127,38 +185,38 @@ $(document).ready(function () {
       );
       return;
     }
-  
+
     // Create a bar chart for each active category
     for (const category of activeCategories) {
       // Only provide the data needed for the current category
       const barData = activeData.map((entry) => entry[category]);
-  
+
       // Create the bar chart for the current category
       createBarChart(barData, category);
     }
-  
+
     // Update the visibility of the charts based on the maximum number of bars set in the dropdown menu
     updateVisibility();
   }
-  
+
   // Function to create a bar chart for each category
   function createBarChart(barData, category) {
     // Calculate the data for the bar chart
     const data = createBarChartData(barData, category);
-  
+
     const labels = data.labels;
-  
+
     // Creating a wrapper element for the chart since resizing is easier for divs
     const chartWrapper = document.createElement("div");
     chartWrapper.className = "chart-wrapper";
     chartWrapper.id = "chart-wrapper-" + category.replaceAll(" ", "€");
-  
+
     const chartTitle = category.split("_").pop();
-  
+
     // Calculate width of container based on the number of labels and the length of the category name
     const width = Math.max(labels.length * 6);
     chartWrapper.style.width = `${width}em`;
-  
+
     // Create a new DOM element for the chart title
     const chartTitleElement = document.createElement("div");
     chartTitleElement.className = "chart-title";
@@ -166,28 +224,28 @@ $(document).ready(function () {
       <h5>${chartTitle}</h5>
       <img src="${questionCirclePath}" class="question-circle" title="${explanations[category]}" alt="Information about the category of this chart">
     `;
-  
+
     const chartContainer = document.createElement("div");
     chartContainer.className = "chart-container";
-  
+
     // create new DOM element for the chart
     const canvas = document.createElement("canvas");
     canvas.id = "chart-" + category.replaceAll(" ", "€");
     chartContainer.appendChild(canvas);
-  
+
     // Append the chart container to the element for all charts
     $("#chartsContainer").append(chartWrapper);
     chartWrapper.appendChild(chartTitleElement);
     chartWrapper.appendChild(chartContainer);
-  
+
     // Create the chart for the current category and append it to the container
-    const chart = new Chart(canvas.id, {
+    new Chart(canvas.id, {
       type: "bar",
       data: data,
       options: createChartOptions(category),
     });
   }
-  
+
   // Function to create the data in the format required by Chart.js for bar charts
   function createBarChartData(barData, category) {
     // Count the occurrences of each value in the data entries
@@ -198,19 +256,19 @@ $(document).ready(function () {
         occurrences[value] = (occurrences[value] || 0) + 1;
       }
     }
-  
+
     // The keys of the occurrences will be the labels for the chart
     const labels = Object.keys(occurrences).sort((a, b) => {
       // Check if the labels are all convertable to numbers
       if (Object.keys(occurrences).every((key) => !isNaN(key))) {
         return parseFloat(a) - parseFloat(b);
       }
-  
+
       const prioA = specialOrders[a] ?? 0;
       const prioB = specialOrders[b] ?? 0;
       return prioA !== prioB ? prioA - prioB : a.localeCompare(b);
     });
-  
+
     return {
       labels: labels,
       datasets: [
@@ -225,7 +283,7 @@ $(document).ready(function () {
       ],
     };
   }
-  
+
   // Creating the chart options based on the category
   function createChartOptions(category) {
     return {
@@ -247,9 +305,9 @@ $(document).ready(function () {
         x: {
           ticks: {
             autoSkip: false,
-            callback: function (value, index, ticks) {
+            callback: function (value) {
               const label = this.getLabelForValue(value);
-  
+
               // Limit the number of characters displayed on the x-axis
               return label.length > 20 ? label.slice(0, 20) + "..." : label;
             },
@@ -267,7 +325,7 @@ $(document).ready(function () {
       onClick: function (event, elements, chart) {
         if (elements.length === 0) return;
         const label = chart.data.labels[elements[0].index];
-  
+
         const tableHTML = createModalHTML(category, label);
         $("#modal-header-info").text(
           `Studies for ${category.split("_").pop()} filtered by "${label}"`
@@ -277,53 +335,56 @@ $(document).ready(function () {
       },
     };
   }
-  
+
   // Finds the full category name based on the short name provided by the checkbox
   function getFullCategory(category) {
     return categories.find((cat) => cat.includes(category));
   }
-  
+
   /*
     Section for the visibility of the charts
     - The visibility of the charts is updated based on the maximum number of bars set in the dropdown menu
     - If a chart exceeds the maximum number of bars, it is hidden and a message is displayed in the hidden charts list
     - If any filter changes, the charts and the chart's visibility is updated accordingly
   */
-  
+
   function updateVisibility() {
     const maxBars = parseInt($("#maxBarsDropdown").val());
     const filters = JSON.parse(window.sessionStorage.getItem(FILTER_KEY));
     const activeCategories = filters.categoryFilters
       .map((cat) => getFullCategory(cat))
       .filter((cat) => cat !== undefined);
+
     // Remove "Main Author" category if it is in the active categories
     const firstAuthorIndex = activeCategories.indexOf("Main Author");
     if (firstAuthorIndex !== -1) {
       activeCategories.splice(firstAuthorIndex, 1);
     }
-  
+
     // Reset the hidden charts message and list
     $("#hiddenChartsMessage").hide();
     $("#hiddenChartsList").empty();
-  
+
     // Hide all charts that exceed the maximum number of bars
     for (const category of activeCategories) {
       const chart = Chart.getChart("chart-" + category.replaceAll(" ", "€"));
       const chartWrapper = document.getElementById(
         "chart-wrapper-" + category.replaceAll(" ", "€")
       );
-  
+
+      if (!chart || !chartWrapper) continue;
+
       // if there are no labels, dont show the chart
       if (chart.data.labels.length === 0) {
         chartWrapper.style.display = "none";
         continue;
       }
-  
+
       // Hide the chart if it exceeds the maximum number of bars
       if (chart.data.labels.length > maxBars) {
         // Hide the chart wrapper
         chartWrapper.style.display = "none";
-  
+
         // Add a message to the hidden charts list
         $("#hiddenChartsList").append(
           `<li id="message-${category}"><strong>${category
@@ -337,18 +398,18 @@ $(document).ready(function () {
         chartWrapper.style.display = "flex";
       }
     }
-  
+
     // If there is at least one hidden chart, show the hidden charts message
     if ($("#hiddenChartsList").children().length > 0) {
       $("#hiddenChartsMessage").show();
     }
   }
+
   // Create bar charts for each category that is currently selected
   createBarCharts();
 
   // When the maximum number of displayed bars is changed, create the view again
   $("#maxBarsDropdown").on("change", function () {
-    // Remove all existing charts and hidden messages
     updateVisibility();
   });
 
@@ -374,6 +435,8 @@ $(document).ready(function () {
   });
 
   $(".range-slider").each(function () {
+    if (!this.noUiSlider) return;
+
     this.noUiSlider.on("end", function () {
       createBarCharts();
     });
