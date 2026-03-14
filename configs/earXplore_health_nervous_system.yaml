@@ -1,7 +1,7 @@
 database-path: health_data/health_nervous_system.csv
 explanations-path: health_data/explanations_health.csv
 
-advanced-sidebar-categories: ["Precision", "Recall", "Accuracy"]
+advanced-sidebar-categories: ["Precision", "Recall", "Main Author","Accuracy"]
 select-deselect-all-categories: ["Year", "Health Indicator", "Sensor Position", "Sensor Type", "Physiological Signal", "Advantage"]
 excluded-sidebar-categories: ["ID","Authors","Study Link"]
 start-category-filters: ["Main Author", "Year","Study Link","Health Indicator","Sensor Position","Sensor Type","Physiological Signal", "Advantage"]
