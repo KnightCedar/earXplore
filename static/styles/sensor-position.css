@@ -37,17 +37,26 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #d9534f;
-  border: 2px solid white;
+  background: rgb(200,195,210);
+  border: 1.5px solid rgb(140,135,160);
   cursor: pointer;
   transform: translate(-50%, -50%);
-  z-index: 10;           
+  z-index: 10;
+  user-select: none;
+  box-shadow: none;
+  transition:
+    width 0.25s ease,
+    height 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease,
+    opacity 0.25s ease,
+    transform 0.2s ease;
 }
 
 .sensor-position-dot.is-active {
-  background: gold;          
-  border: 2px solid #d9534f;  
-  transform: translate(-50%, -50%) scale(1.25);
+border: 2px solid #2b2b2b;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.9);
+  transform: translate(-50%, -50%) scale(1.12);
 }
 
 #sensorPositionResults {
@@ -58,7 +67,7 @@
 
 #sensorPositionStudyDetail {
   max-height: 520px;            /* Control the height. */
-  overflow-y: auto;        
+  overflow-y: auto;
   border: 1px solid #eee;
   border-radius: 10px;
   padding: 8px;
@@ -78,7 +87,7 @@
 
 #sensorPositionStudies {
   max-height: 260px;      /* Control the height of related studies */
-  overflow-y: auto;   
+  overflow-y: auto;
   margin-bottom: 12px;
 }
 

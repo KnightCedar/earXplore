@@ -13,8 +13,8 @@ const sensorPositions = [
   { id: "around_the_ear", label: "Around the ear", x: 58, y: 28.5, value: "Around the ear" },
   { id: "ear_concha", label: "Ear Concha", x: 51, y: 50, value: "Ear Concha" },
   { id: "earlobe", label: "Earlobe", x: 53, y: 77, value: "Earlobe" },
-  { id: "headphone_type", label: "Headphone type", x: 43, y: 11.5, value: "Headphone type" },
-  { id: "head_mounted", label: "Head-mounted", x: 43, y: 5, value: "Head-mounted" },
+  { id: "headphone_type", label: "Headphone type", x: 43, y: 13, value: "Headphone type" },
+  { id: "head_mounted", label: "Head-mounted", x: 43, y: 6, value: "Head-mounted" },
 ];
 
 function normalizeCell(cell) {
@@ -84,9 +84,7 @@ function getActiveSliderFilters() {
 
 function rowMatchesCheckboxFilters(row, checkboxFilterState) {
   for (const [col, { selectedValues }] of Object.entries(checkboxFilterState)) {
-    if (!selectedValues.length) {
-      return false;
-    }
+    if (!selectedValues.length) return false;
 
     const raw = row[col];
     if (raw == null || raw === "" || raw === "N/A") return false;
@@ -131,6 +129,97 @@ function getFilteredStudies() {
     if (!rowMatchesSliderFilters(row, sliderFilters)) return false;
     if (activeSensorPosition && !rowMatchesSensorPosition(row, activeSensorPosition.value)) return false;
     return true;
+  });
+}
+
+/**
+ * Count the number of studies for each sensor position under the current sidebar filters.
+ */
+function getStudyCountBySensorPosition() {
+  const checkboxFilterState = getCheckboxFilterState();
+  const sliderFilters = getActiveSliderFilters();
+
+  const counts = {};
+  sensorPositions.forEach((pos) => {
+    counts[pos.id] = 0;
+  });
+
+  data.forEach((row) => {
+    if (!rowMatchesCheckboxFilters(row, checkboxFilterState)) return;
+    if (!rowMatchesSliderFilters(row, sliderFilters)) return;
+
+    sensorPositions.forEach((pos) => {
+      if (rowMatchesSensorPosition(row, pos.value)) {
+        counts[pos.id] += 1;
+      }
+    });
+  });
+
+  return counts;
+}
+
+function sqrtNormalize(value, maxValue) {
+  if (maxValue <= 0 || value <= 0) return 0;
+  return Math.sqrt(value) / Math.sqrt(maxValue);
+}
+
+function getHeatColor(count, maxCount) {
+  if (count <= 0 || maxCount <= 0) {
+    return {
+      fill: "rgb(205,200,215)",
+      border: "rgb(140,135,160)",
+    };
+  }
+
+  const t = sqrtNormalize(count, maxCount);
+
+  const r = Math.round(205 - t * 70);
+  const g = Math.round(200 - t * 80);
+  const b = Math.round(215 - t * 40);
+
+  const borderR = Math.round(140 - t * 50);
+  const borderG = Math.round(135 - t * 55);
+  const borderB = Math.round(160 - t * 35);
+
+  return {
+    fill: `rgb(${r},${g},${b})`,
+    border: `rgb(${borderR},${borderG},${borderB})`,
+  };
+}
+
+/**
+ * Update the size and color of all dots
+ */
+function updateDotVisuals() {
+  const counts = getStudyCountBySensorPosition();
+  const values = Object.values(counts);
+  const maxCount = Math.max(...values, 0);
+
+  const MIN_SIZE = 14;
+  const MAX_SIZE = 26;
+
+  document.querySelectorAll(".sensor-position-dot").forEach((dot) => {
+    const id = dot.dataset.id;
+    const count = counts[id] || 0;
+
+    const normalized = sqrtNormalize(count, maxCount);
+    const size = MIN_SIZE + normalized * (MAX_SIZE - MIN_SIZE);
+    const colors = getHeatColor(count, maxCount);
+
+    dot.style.width = `${size}px`;
+    dot.style.height = `${size}px`;
+    dot.style.opacity = count === 0 ? "0.55" : "1";
+
+    if (!dot.classList.contains("is-active")) {
+      dot.style.background = colors.fill;
+      dot.style.borderColor = colors.border;
+    }
+
+    const pos = sensorPositions.find((p) => p.id === id);
+    if (pos) {
+      dot.title = `${pos.label} (${count} studies)`;
+      dot.setAttribute("aria-label", `${pos.label}, ${count} studies`);
+    }
   });
 }
 
@@ -267,6 +356,7 @@ function applyAllFilters() {
       : "No sensor position selected";
   }
 
+  updateDotVisuals();
   renderStudies(studies);
 }
 
